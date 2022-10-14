@@ -18,16 +18,12 @@
                 var tempArray = work.Split(']');
                 var tempResult = tempArray[1].Split(')');
                 var year = int.Parse(tempResult[0].TrimStart(NeedToDelete));
-                work = tempResult[1];
                 return year;
-
-                //var yearOfWork = int.Parse(tempArray[0].Substring(9));
             }
             else
             {
                 var tempResult = work.Split(')');
                 var year = int.Parse(tempResult[0].TrimStart(NeedToDelete));
-                work = tempResult[1];
                 return year;
             }
         }

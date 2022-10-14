@@ -178,6 +178,15 @@ namespace Parser1.Servises
                         var organization =
                             driver.FindElement(By.XPath("/html/body/div[1]/center/table[2]/tbody/tr[3]/td/ul[1]/li/a")).Text;
 
+                        //try
+                        //{
+                        //    rating = GetRating();
+                        //}
+                        //catch (Exception e)
+                        //{
+                        //    continue;
+                        //}
+
                         Task.Delay(5000);
 
                         driver.FindElement(By.XPath("//a[@class='c']")).Click();
@@ -196,14 +205,7 @@ namespace Parser1.Servises
                                 .Select(x => x.Text)
                                 .ToList();
 
-                        try
-                        {
-                            rating = GetRating();
-                        }
-                        catch (Exception e)
-                        {
-                            continue;
-                        }
+
 
                         AddWorksToDb(directionForScientist, listOfWork, scientistName, organization);
 
@@ -327,6 +329,8 @@ namespace Parser1.Servises
 
         private int GetRating()
         {
+            //*[@id="gsc_rsb_st"]/thead/tr/th[3]
+            // "/html/body/div[1]/center/table[2]/tbody/tr[2]/td/table/tbody/tr/td[3]/table/tbody/tr/td/div/a"
             driver.FindElement(By.XPath("/html/body/div[1]/center/table[2]/tbody/tr[2]/td/table/tbody/tr/td[3]/table/tbody/tr/td/div/a")).Click();
 
             var rating = driver
