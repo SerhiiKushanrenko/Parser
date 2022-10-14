@@ -6,6 +6,8 @@
 
         public string Name { get; set; }
 
+        public int Year { get; set; }
+
         public ICollection<ScientistWork> ScientistsWorks { get; set; }
     }
 }

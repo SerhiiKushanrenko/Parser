@@ -16,6 +16,8 @@ namespace Parser1.Servises
         {
             _context = context;
         }
+
+        // добавить в єтот метод год к работе 
         public void AddWorkToScientists(string direction)
         {
             var counterForPaggination = 1;
@@ -146,6 +148,7 @@ namespace Parser1.Servises
         public void GetGeneralInfo(string directionForSearch, string directionForScientist)
         {
             var counterForPaggination = 1;
+            var rating = 0;
 
             driver.Url = @"http://irbis-nbuv.gov.ua/cgi-bin/suak/corp.exe?C21COM=F&I21DBN=SAUA&P21DBN=SAUA";
 
@@ -193,6 +196,14 @@ namespace Parser1.Servises
                                 .Select(x => x.Text)
                                 .ToList();
 
+                        try
+                        {
+                            rating = GetRating();
+                        }
+                        catch (Exception e)
+                        {
+                            continue;
+                        }
 
                         AddWorksToDb(directionForScientist, listOfWork, scientistName, organization);
 
@@ -228,12 +239,15 @@ namespace Parser1.Servises
         {
             foreach (var scientistWork in listOfWork)
             {
+                var yearOfWork = StrHelper.SplitYearFromWork(scientistWork);
+                var currentNameOfWork = StrHelper.GetOnlyNameOfWork(scientistWork);
+
                 //var checkIsScientistExist = _context.Scientists.Any(e => e.Name.Equals(scientistName));
                 var scientistFromDb = _context.Scientists.FirstOrDefault(e => e.Name.Equals(scientistName));
                 if (scientistFromDb is not null)
                 {
                     var workScientistFromDb =
-                        _context.WorkOfScientists.FirstOrDefault(e => e.Name == scientistWork);
+                        _context.WorkOfScientists.FirstOrDefault(e => e.Name == currentNameOfWork);
 
                     if (workScientistFromDb is not null)
                     {
@@ -260,7 +274,8 @@ namespace Parser1.Servises
                     {
                         WorkOfScientist newWorkOfScientist = new()
                         {
-                            Name = scientistWork,
+                            Name = currentNameOfWork,
+                            Year = yearOfWork
                         };
 
                         var work = _context.WorkOfScientists.Add(newWorkOfScientist);
@@ -291,7 +306,8 @@ namespace Parser1.Servises
 
                     WorkOfScientist newWorkOfScientist = new()
                     {
-                        Name = scientistWork,
+                        Name = currentNameOfWork,
+                        Year = yearOfWork
                     };
 
                     var work = _context.WorkOfScientists.Add(newWorkOfScientist);
@@ -309,5 +325,14 @@ namespace Parser1.Servises
             }
         }
 
+        private int GetRating()
+        {
+            driver.FindElement(By.XPath("/html/body/div[1]/center/table[2]/tbody/tr[2]/td/table/tbody/tr/td[3]/table/tbody/tr/td/div/a")).Click();
+
+            var rating = driver
+                .FindElement(By.XPath("/html/body/div/div[12]/div[2]/div/div[1]/div[1]/table/thead/tr/th[3]"))
+                .Text;
+            return int.Parse(rating);
+        }
     }
 }
