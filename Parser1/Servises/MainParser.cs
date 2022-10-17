@@ -54,7 +54,7 @@ namespace Parser1.Servises
 
                     Task.Delay(500);
 
-                    var directionId = _context.Directions.FirstOrDefault(e => e.Name.Equals(currentDiraction.Text)).Id;
+                    var directionId = _context.Directions.FirstOrDefault(e => e.Name.Equals(currentDiraction.Text))!.Id;
 
 
                     for (int i = 0; i < names.Count; i++)
@@ -90,6 +90,7 @@ namespace Parser1.Servises
             catch (Exception)
             {
                 // driver.Quit();
+                driver.Close();
                 _supportParser.GetGeneralInfo("педагогічні науки", "Педагогіка");
             }
 

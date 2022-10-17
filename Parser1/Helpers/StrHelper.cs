@@ -33,5 +33,26 @@
             var nameOfWork = work.Split(')');
             return nameOfWork[1];
         }
+
+        public static int GetOnlyRating(string ratingWithTime)
+        {
+            var resultInStr = "";
+            var finalRating = 0;
+
+            var ratingArray = ratingWithTime.Split('(');
+            var rating = ratingArray[0];
+
+            for (int i = 0; i < rating.Length; i++)
+            {
+                if (char.IsDigit(rating[i]))
+                {
+                    resultInStr += rating[i];
+                }
+            }
+
+            finalRating = Int32.Parse(resultInStr);
+            return finalRating;
+        }
     }
 }
+

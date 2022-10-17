@@ -11,10 +11,12 @@ namespace Parser1.Servises
     {
         static readonly IWebDriver driver = new ChromeDriver();
         private readonly ApplicationContext _context;
+        private readonly IRatingServise _ratingServise;
 
-        public SupportParser(ApplicationContext context)
+        public SupportParser(ApplicationContext context, IRatingServise ratingServise)
         {
             _context = context;
+            _ratingServise = ratingServise;
         }
 
         // добавить в єтот метод год к работе 
@@ -34,7 +36,8 @@ namespace Parser1.Servises
 
             while (true)
             {
-                var namesFromSite = driver.FindElements(By.XPath("//table[contains(@class, 'advanced')]/tbody/tr/td/p/a/u"))
+                var namesFromSite = driver
+                    .FindElements(By.XPath("//table[contains(@class, 'advanced')]/tbody/tr/td/p/a/u"))
                     .Select(x => x.Text)
                     .ToList();
 
@@ -45,7 +48,8 @@ namespace Parser1.Servises
                     {
 
                         driver.FindElement(
-                                By.XPath($"//table[contains(@class, 'advanced')]/tbody/tr/td/p/a/u[contains(., \"{name}\")]"))
+                                By.XPath(
+                                    $"//table[contains(@class, 'advanced')]/tbody/tr/td/p/a/u[contains(., \"{name}\")]"))
                             .Click();
 
                         Task.Delay(5000);
@@ -62,7 +66,8 @@ namespace Parser1.Servises
                         var scientistName = StrHelper.GetOnlyName(dirtyScientistName);
 
                         var listOfWork =
-                            driver.FindElements(By.XPath("/html/body/div[1]/center/table[2]/tbody/tr[4]/td[1]/ol[1]/li"))
+                            driver.FindElements(
+                                    By.XPath("/html/body/div[1]/center/table[2]/tbody/tr[4]/td[1]/ol[1]/li"))
                                 .Select(x => x.Text)
                                 .ToList();
 
@@ -80,7 +85,9 @@ namespace Parser1.Servises
                                 if (workScientistFromDb is not null)
                                 {
 
-                                    if (_context.ScientistsWork.Any(e => e.ScientistId.Equals(scientistFromDb.Id) & e.WorkOfScientistId.Equals(workScientistFromDb.Id)))
+                                    if (_context.ScientistsWork.Any(e =>
+                                            e.ScientistId.Equals(scientistFromDb.Id) &
+                                            e.WorkOfScientistId.Equals(workScientistFromDb.Id)))
                                     {
                                         continue;
                                     }
@@ -130,7 +137,9 @@ namespace Parser1.Servises
                     counterForPaggination++;
                     try
                     {
-                        driver.FindElement(By.XPath($"/html/body/div[1]/center/table[2]/tbody/tr[1]/td[2]/font/table/tbody/tr/td[{counterForPaggination}]")).Click();
+                        driver.FindElement(By.XPath(
+                                $"/html/body/div[1]/center/table[2]/tbody/tr[1]/td[2]/font/table/tbody/tr/td[{counterForPaggination}]"))
+                            .Click();
                     }
                     catch (OpenQA.Selenium.NoSuchElementException e)
                     {
@@ -141,6 +150,7 @@ namespace Parser1.Servises
                 {
                 }
             }
+
             driver.Quit();
         }
 
@@ -163,7 +173,8 @@ namespace Parser1.Servises
             while (true)
             {
 
-                var namesFromSite = driver.FindElements(By.XPath("//table[contains(@class, 'advanced')]/tbody/tr/td/p/a/u"))
+                var namesFromSite = driver
+                    .FindElements(By.XPath("//table[contains(@class, 'advanced')]/tbody/tr/td/p/a/u"))
                     .Select(x => x.Text)
                     .ToList();
 
@@ -172,20 +183,23 @@ namespace Parser1.Servises
                     foreach (var name in namesFromSite)
                     {
                         driver.FindElement(
-                                By.XPath($"//table[contains(@class, 'advanced')]/tbody/tr/td/p/a/u[contains(., \"{name}\")]"))
+                                By.XPath(
+                                    $"//table[contains(@class, 'advanced')]/tbody/tr/td/p/a/u[contains(., \"{name}\")]"))
                             .Click();
 
                         var organization =
-                            driver.FindElement(By.XPath("/html/body/div[1]/center/table[2]/tbody/tr[3]/td/ul[1]/li/a")).Text;
+                            driver.FindElement(By.XPath("/html/body/div[1]/center/table[2]/tbody/tr[3]/td/ul[1]/li/a"))
+                                .Text;
 
-                        //try
-                        //{
-                        //    rating = GetRating();
-                        //}
-                        //catch (Exception e)
-                        //{
-                        //    continue;
-                        //}
+                        try
+                        {
+
+                            _ratingServise.GetRatingForScientist(name);
+                        }
+                        catch (Exception e)
+                        {
+                            continue;
+                        }
 
                         Task.Delay(5000);
 
@@ -201,7 +215,8 @@ namespace Parser1.Servises
                         var scientistName = StrHelper.GetOnlyName(dirtyScientistName);
 
                         var listOfWork =
-                            driver.FindElements(By.XPath("/html/body/div[1]/center/table[2]/tbody/tr[4]/td[1]/ol[1]/li"))
+                            driver.FindElements(
+                                    By.XPath("/html/body/div[1]/center/table[2]/tbody/tr[4]/td[1]/ol[1]/li"))
                                 .Select(x => x.Text)
                                 .ToList();
 
@@ -216,9 +231,12 @@ namespace Parser1.Servises
                         driver.Navigate().Back();
 
                     }
+
                     try
                     {
-                        driver.FindElement(By.XPath($"/html/body/div[1]/center/table[2]/tbody/tr[1]/td[2]/font/table/tbody/tr/td[{++counterForPaggination}]")).Click();
+                        driver.FindElement(By.XPath(
+                                $"/html/body/div[1]/center/table[2]/tbody/tr[1]/td[2]/font/table/tbody/tr/td[{++counterForPaggination}]"))
+                            .Click();
                     }
                     catch (OpenQA.Selenium.NoSuchElementException e)
                     {
@@ -256,7 +274,9 @@ namespace Parser1.Servises
                         //связан ли ученій которій есть в базе с работой которая тоже есть в базе 
                         //var test = scientistFromDb.ScientistsWorks.Any(e =>
                         //    e.WorkOfScientistId == workScientistFromDb.Id);
-                        if (_context.ScientistsWork.Any(e => e.ScientistId.Equals(scientistFromDb.Id) && e.WorkOfScientistId.Equals(workScientistFromDb.Id)))
+                        if (_context.ScientistsWork.Any(e =>
+                                e.ScientistId.Equals(scientistFromDb.Id) &&
+                                e.WorkOfScientistId.Equals(workScientistFromDb.Id)))
                         {
                             continue;
                         }
@@ -322,21 +342,8 @@ namespace Parser1.Servises
                     _context.ScientistsWork.Add(newScientistWork);
 
                     _context.SaveChanges();
-
                 }
             }
-        }
-
-        private int GetRating()
-        {
-            //*[@id="gsc_rsb_st"]/thead/tr/th[3]
-            // "/html/body/div[1]/center/table[2]/tbody/tr[2]/td/table/tbody/tr/td[3]/table/tbody/tr/td/div/a"
-            driver.FindElement(By.XPath("/html/body/div[1]/center/table[2]/tbody/tr[2]/td/table/tbody/tr/td[3]/table/tbody/tr/td/div/a")).Click();
-
-            var rating = driver
-                .FindElement(By.XPath("/html/body/div/div[12]/div[2]/div/div[1]/div[1]/table/thead/tr/th[3]"))
-                .Text;
-            return int.Parse(rating);
         }
     }
 }

@@ -12,6 +12,7 @@ builder.Services.AddDbContext<ApplicationContext>(options => options.UseNpgsql(b
 
 builder.Services.AddTransient<IMainParser, MainParser>();
 builder.Services.AddTransient<ISupportParser, SupportParser>();
+builder.Services.AddTransient<IRatingServise, RatingServise>();
 
 builder.Services.AddControllers();
 builder.Services.AddMassTransit(cfg =>
