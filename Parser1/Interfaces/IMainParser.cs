@@ -1,10 +1,8 @@
-﻿using Parser1.Models;
-
-namespace Parser1.Interfaces
+﻿namespace Parser1.Interfaces
 {
     public interface IMainParser
     {
-        public List<Scientist> ParseGeneralInfo();
+        public void ParseGeneralInfo();
 
         public List<string> GetDirection();
 

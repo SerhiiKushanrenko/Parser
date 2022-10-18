@@ -5,5 +5,7 @@
         public void AddWorkToScientists(string direction);
         public void GetGeneralInfo(string directionForSearch, string directionForScienticst);
 
+        public void addWorktoScientist(string name, List<string> listOfWork);
+        public List<string> GetListOfWork(string name);
     }
 }

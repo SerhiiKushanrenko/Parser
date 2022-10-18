@@ -9,34 +9,147 @@ namespace Parser1.Servises
 {
     public class SupportParser : ISupportParser
     {
-        static readonly IWebDriver driver = new ChromeDriver();
+        private readonly IWebDriver _driver;
         private readonly ApplicationContext _context;
         private readonly IRatingServise _ratingServise;
 
-        public SupportParser(ApplicationContext context, IRatingServise ratingServise)
+        public SupportParser(ApplicationContext context, IRatingServise ratingServise, IWebDriver driver)
         {
             _context = context;
             _ratingServise = ratingServise;
+            _driver = driver;
         }
 
-        // добавить в єтот метод год к работе 
+        public List<string> GetListOfWork(string name)
+        {
+            List<string>? listOfWork;
+            IWebDriver driver = new ChromeDriver();
+
+            driver.Url = @"http://irbis-nbuv.gov.ua/cgi-bin/suak/corp.exe?C21COM=F&I21DBN=SAUA&P21DBN=SAUA";
+
+            driver.FindElement(By.Name("1_S21STR")).SendKeys(name);
+
+            driver.FindElement(By.XPath("//input[@type='submit']")).Click();
+
+            try
+            {
+                var IsWorkExist = driver.FindElement(By.XPath(
+                    "//table[contains(@class,'advanced')]//tbody//td[contains(.,'За вашим запитом нічого не знайдено, уточніть запит.')]//big"));
+                listOfWork = null;
+
+                _driver.Close();
+
+                return listOfWork;
+            }
+            catch (Exception e)
+            {
+                driver.FindElement(By.XPath("//table[2]/tbody/tr/td[3]/p/a")).Click();
+
+                Task.Delay(3000);
+
+                driver.FindElement(By.XPath("//a[@class='c']")).Click();
+
+                Task.Delay(5000);
+
+                listOfWork =
+                    driver.FindElements(
+                            By.XPath("/html/body/div[1]/center/table[2]/tbody/tr[4]/td[1]/ol[1]/li"))
+                        .Select(x => x.Text)
+                        .ToList();
+
+                driver.Quit();
+
+                return listOfWork;
+            }
+        }
+
+        /// <summary>
+        /// Add Work to Db for one scientist  
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="listOfWork"></param>
+        public void addWorktoScientist(string name, List<string> listOfWork)
+        {
+            if (listOfWork is not null)
+            {
+                foreach (var scientistWork in listOfWork)
+                {
+                    var scientistFromDb = _context.Scientists.First(e => e.Name.Equals(name));
+                    var workScientistFromDb =
+                        _context.WorkOfScientists.FirstOrDefault(e => e.Name == scientistWork);
+
+                    if (workScientistFromDb is not null)
+                    {
+
+                        if (_context.ScientistsWork.Any(e =>
+                                e.ScientistId.Equals(scientistFromDb.Id) &
+                                e.WorkOfScientistId.Equals(workScientistFromDb.Id)))
+                        {
+                            continue;
+                        }
+                        else
+                        {
+                            ScientistWork newScientistWork = new()
+                            {
+                                ScientistId = scientistFromDb.Id,
+                                WorkOfScientistId = workScientistFromDb.Id
+                            };
+                            _context.ScientistsWork.Add(newScientistWork);
+
+                            _context.SaveChanges();
+                        }
+                    }
+                    else
+                    {
+                        WorkOfScientist newWorkOfScientist = new WorkOfScientist()
+                        {
+                            Name = scientistWork,
+                        };
+
+                        var work = _context.WorkOfScientists.Add(newWorkOfScientist);
+
+
+                        _context.SaveChanges();
+
+                        ScientistWork newScientistWork = new()
+                        {
+                            ScientistId = scientistFromDb.Id,
+                            WorkOfScientistId = work.Entity.Id
+                        };
+                        _context.ScientistsWork.Add(newScientistWork);
+
+
+                        _context.SaveChanges();
+                    }
+
+                }
+            }
+
+
+
+        }
+
+        /// <summary>
+        /// Get Work for All Scientist and add Sceintisc and work to db
+        /// </summary>
+        /// <param name="direction"></param>
         public void AddWorkToScientists(string direction)
         {
             var counterForPaggination = 1;
 
-            driver.Url = @"http://irbis-nbuv.gov.ua/cgi-bin/suak/corp.exe?C21COM=F&I21DBN=SAUA&P21DBN=SAUA";
+            _driver.Url = @"http://irbis-nbuv.gov.ua/cgi-bin/suak/corp.exe?C21COM=F&I21DBN=SAUA&P21DBN=SAUA";
 
-            driver.FindElement(By.XPath("//select[contains(@name,'4_S21STR')]")).SendKeys(direction);
+            _driver.FindElement(By.XPath("//select[contains(@name,'4_S21STR')]")).SendKeys(direction);
 
             Task.Delay(500);
 
-            driver.FindElement(By.XPath("//input[@type='submit']")).Click();
+            _driver.FindElement(By.XPath("//input[@type='submit']")).Click();
 
             Task.Delay(7000);
 
             while (true)
             {
-                var namesFromSite = driver
+                var namesFromSite = _driver
                     .FindElements(By.XPath("//table[contains(@class, 'advanced')]/tbody/tr/td/p/a/u"))
                     .Select(x => x.Text)
                     .ToList();
@@ -47,18 +160,18 @@ namespace Parser1.Servises
                     foreach (var name in namesFromSite)
                     {
 
-                        driver.FindElement(
+                        _driver.FindElement(
                                 By.XPath(
                                     $"//table[contains(@class, 'advanced')]/tbody/tr/td/p/a/u[contains(., \"{name}\")]"))
                             .Click();
 
                         Task.Delay(5000);
 
-                        driver.FindElement(By.XPath("//a[@class='c']")).Click();
+                        _driver.FindElement(By.XPath("//a[@class='c']")).Click();
 
                         Task.Delay(5000);
 
-                        var dirtyScientistName = driver
+                        var dirtyScientistName = _driver
                             .FindElement(By.XPath(
                                 "/html/body/div[1]/center/table[2]/tbody/tr[2]/td/table/tbody/tr/td[2]/span[1]/strong"))
                             .GetAttribute("textContent");
@@ -66,7 +179,7 @@ namespace Parser1.Servises
                         var scientistName = StrHelper.GetOnlyName(dirtyScientistName);
 
                         var listOfWork =
-                            driver.FindElements(
+                            _driver.FindElements(
                                     By.XPath("/html/body/div[1]/center/table[2]/tbody/tr[4]/td[1]/ol[1]/li"))
                                 .Select(x => x.Text)
                                 .ToList();
@@ -129,15 +242,15 @@ namespace Parser1.Servises
                         }
 
                         Task.Delay(1000);
-                        driver.Navigate().Back();
+                        _driver.Navigate().Back();
                         Task.Delay(4000);
-                        driver.Navigate().Back();
+                        _driver.Navigate().Back();
                     }
 
                     counterForPaggination++;
                     try
                     {
-                        driver.FindElement(By.XPath(
+                        _driver.FindElement(By.XPath(
                                 $"/html/body/div[1]/center/table[2]/tbody/tr[1]/td[2]/font/table/tbody/tr/td[{counterForPaggination}]"))
                             .Click();
                     }
@@ -151,29 +264,33 @@ namespace Parser1.Servises
                 }
             }
 
-            driver.Quit();
+            _driver.Quit();
         }
 
-
+        /// <summary>
+        /// Get General info for Scientist 
+        /// </summary>
+        /// <param name="directionForSearch"></param>
+        /// <param name="directionForScientist"></param>
         public void GetGeneralInfo(string directionForSearch, string directionForScientist)
         {
             var counterForPaggination = 1;
             var rating = 0;
 
-            driver.Url = @"http://irbis-nbuv.gov.ua/cgi-bin/suak/corp.exe?C21COM=F&I21DBN=SAUA&P21DBN=SAUA";
+            _driver.Url = @"http://irbis-nbuv.gov.ua/cgi-bin/suak/corp.exe?C21COM=F&I21DBN=SAUA&P21DBN=SAUA";
 
-            driver.FindElement(By.XPath("//select[contains(@name,'4_S21STR')]")).SendKeys(directionForSearch);
+            _driver.FindElement(By.XPath("//select[contains(@name,'4_S21STR')]")).SendKeys(directionForSearch);
 
             Task.Delay(500);
 
-            driver.FindElement(By.XPath("//input[@type='submit']")).Click();
+            _driver.FindElement(By.XPath("//input[@type='submit']")).Click();
 
             Task.Delay(7000);
 
             while (true)
             {
 
-                var namesFromSite = driver
+                var namesFromSite = _driver
                     .FindElements(By.XPath("//table[contains(@class, 'advanced')]/tbody/tr/td/p/a/u"))
                     .Select(x => x.Text)
                     .ToList();
@@ -182,13 +299,13 @@ namespace Parser1.Servises
                 {
                     foreach (var name in namesFromSite)
                     {
-                        driver.FindElement(
+                        _driver.FindElement(
                                 By.XPath(
                                     $"//table[contains(@class, 'advanced')]/tbody/tr/td/p/a/u[contains(., \"{name}\")]"))
                             .Click();
 
                         var organization =
-                            driver.FindElement(By.XPath("/html/body/div[1]/center/table[2]/tbody/tr[3]/td/ul[1]/li/a"))
+                            _driver.FindElement(By.XPath("/html/body/div[1]/center/table[2]/tbody/tr[3]/td/ul[1]/li/a"))
                                 .Text;
 
                         try
@@ -203,11 +320,11 @@ namespace Parser1.Servises
 
                         Task.Delay(5000);
 
-                        driver.FindElement(By.XPath("//a[@class='c']")).Click();
+                        _driver.FindElement(By.XPath("//a[@class='c']")).Click();
 
                         Task.Delay(5000);
 
-                        var dirtyScientistName = driver
+                        var dirtyScientistName = _driver
                             .FindElement(By.XPath(
                                 "/html/body/div[1]/center/table[2]/tbody/tr[2]/td/table/tbody/tr/td[2]/span[1]/strong"))
                             .GetAttribute("textContent");
@@ -215,7 +332,7 @@ namespace Parser1.Servises
                         var scientistName = StrHelper.GetOnlyName(dirtyScientistName);
 
                         var listOfWork =
-                            driver.FindElements(
+                            _driver.FindElements(
                                     By.XPath("/html/body/div[1]/center/table[2]/tbody/tr[4]/td[1]/ol[1]/li"))
                                 .Select(x => x.Text)
                                 .ToList();
@@ -226,15 +343,15 @@ namespace Parser1.Servises
 
 
                         Task.Delay(1000);
-                        driver.Navigate().Back();
+                        _driver.Navigate().Back();
                         Task.Delay(4000);
-                        driver.Navigate().Back();
+                        _driver.Navigate().Back();
 
                     }
 
                     try
                     {
-                        driver.FindElement(By.XPath(
+                        _driver.FindElement(By.XPath(
                                 $"/html/body/div[1]/center/table[2]/tbody/tr[1]/td[2]/font/table/tbody/tr/td[{++counterForPaggination}]"))
                             .Click();
                     }
@@ -254,6 +371,13 @@ namespace Parser1.Servises
 
         }
 
+        /// <summary>
+        /// support method to General Info for addWork to db 
+        /// </summary>
+        /// <param name="directionForScientist"></param>
+        /// <param name="listOfWork"></param>
+        /// <param name="scientistName"></param>
+        /// <param name="organization"></param>
         private void AddWorksToDb(string directionForScientist, List<string> listOfWork, string scientistName,
                                   string organization)
         {

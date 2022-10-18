@@ -53,6 +53,12 @@
             finalRating = Int32.Parse(resultInStr);
             return finalRating;
         }
+        public static int GetSumFromString(string resultCount)
+        {
+            string[] tempArray = resultCount.Split(":");
+            int sum = int.Parse(tempArray[0].Substring(9));
+            return sum;
+        }
     }
 }
 

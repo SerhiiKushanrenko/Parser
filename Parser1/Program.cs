@@ -1,6 +1,8 @@
 
 using MassTransit;
 using Microsoft.EntityFrameworkCore;
+using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
 using Parser1.EF;
 using Parser1.Interfaces;
 using Parser1.Servises;
@@ -13,6 +15,7 @@ builder.Services.AddDbContext<ApplicationContext>(options => options.UseNpgsql(b
 builder.Services.AddTransient<IMainParser, MainParser>();
 builder.Services.AddTransient<ISupportParser, SupportParser>();
 builder.Services.AddTransient<IRatingServise, RatingServise>();
+builder.Services.AddScoped<IWebDriver, ChromeDriver>();
 
 builder.Services.AddControllers();
 builder.Services.AddMassTransit(cfg =>

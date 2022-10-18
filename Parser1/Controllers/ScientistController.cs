@@ -62,5 +62,59 @@ namespace Parser1.Controllers
             var result = _context.Scientists.Skip(haveToSkip).Take(haveToGet).ToList();
             return result.Any() ? Ok(result) : Ok("Стільки вчених немає");
         }
+
+        [HttpGet("GetScientistFromWork")]
+        public IActionResult GetScientistFromWork(string generalWork)
+        {
+            try
+            {
+                var workOfScientistId = _context.WorkOfScientists.FirstOrDefault(e => e.Name.Equals(generalWork))!.Id;
+                var scientists = _context.ScientistsWork.Where(e => e.WorkOfScientistId == workOfScientistId).Select(q => q.Scientist).ToList();
+                return Ok(scientists);
+            }
+            catch (System.NullReferenceException e)
+            {
+                var a = $"{e.Message} такой работы нет ";
+                return Ok(a);
+            }
+        }
+
+        [HttpGet("GetAllFromDirection")]
+        public async Task<IActionResult> GetAllFromDirection(string direction)
+        {
+            // проверка на обновление бд на сайте
+            // mainParser.CheckOnEquals(direction);
+            try
+            {
+                var directionId = _context.Directions.FirstOrDefault(e => e.Name.Equals(direction))!.Id;
+                var scientists = await _context.Scientists.Where(e => e.DirectionId == directionId).Take(30).ToListAsync();
+                return Ok(scientists);
+            }
+            catch (Exception e)
+            {
+                var a = $"{e.Message} такого направления нет ";
+                return Ok(a);
+            }
+        }
+
+        /// <summary>
+        /// Get Scientists for Organization
+        /// </summary>
+        /// <param name="organization"></param>
+        /// <returns></returns>
+        [HttpGet("GetAllFromOrganization")]
+        public IActionResult GetAllFromOrganization(string organization)
+        {
+            try
+            {
+                List<Scientist> scientists = _context.Scientists.Where(e => e.Organization == organization).ToList();
+                return Ok(scientists);
+            }
+            catch (Exception e)
+            {
+                var a = $"{e.Message} такого направления нет ";
+                return Ok(a);
+            }
+        }
     }
 }
