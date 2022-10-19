@@ -474,5 +474,26 @@ namespace Parser1.Servises
                 }
             }
         }
+
+
+        public void AddSubDirectionToDb(List<string> subDirection, string direction)
+        {
+            var directionId = _context.Directions.FirstOrDefault(e => e.Name.Equals(direction))!.Id;
+
+            foreach (var sub in subDirection)
+            {
+                if (!_context.SubdirectionOfWorks.Any(e => e.Name == sub))
+                {
+                    SubdirectionOfWork newSub = new SubdirectionOfWork()
+                    {
+                        Name = sub,
+                        DirectionId = directionId
+
+                    };
+                    _context.SubdirectionOfWorks.Add(newSub);
+                    _context.SaveChanges();
+                }
+            }
+        }
     }
 }

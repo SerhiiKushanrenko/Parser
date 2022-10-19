@@ -11,19 +11,19 @@
 
         public static int SplitYearFromWork(string work)
         {
-            char[] NeedToDelete = { '(', ')' };
+            char[] needToDelete = { '(', ')' };
 
             if (work.Contains('['))
             {
                 var tempArray = work.Split(']');
                 var tempResult = tempArray[1].Split(')');
-                var year = int.Parse(tempResult[0].TrimStart(NeedToDelete));
+                var year = int.Parse(tempResult[0].TrimStart(needToDelete));
                 return year;
             }
             else
             {
                 var tempResult = work.Split(')');
-                var year = int.Parse(tempResult[0].TrimStart(NeedToDelete));
+                var year = int.Parse(tempResult[0].TrimStart(needToDelete));
                 return year;
             }
         }
@@ -64,6 +64,21 @@
         {
             var result = degreeWithSomeInfo.Split(new char[] { '(', ')' });
             return result[1];
+        }
+
+        public static List<string> GetListSubdirection(List<string> listOfSubDirection)
+        {
+            char[] needToDelete = { 'П', 'е', 'д', 'а', 'г', 'о', 'г', 'і', 'к', 'а', '\r', '\n' };
+            List<string>? result = new List<string>();
+            for (int i = 1; i < listOfSubDirection.Count; i++)
+            {
+                var tempSubdirection = listOfSubDirection[i].TrimStart(needToDelete);
+                result.Add(tempSubdirection);
+            }
+            return result;
+
+
+
         }
     }
 }

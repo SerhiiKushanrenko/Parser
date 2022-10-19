@@ -7,5 +7,7 @@
 
         public void addWorktoScientist(string name, List<string> listOfWork);
         public (List<string>, string degree) GetListOfWork(string name);
+
+        public void AddSubDirectionToDb(List<string> subDirection, string direction);
     }
 }

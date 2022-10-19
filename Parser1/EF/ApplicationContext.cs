@@ -10,7 +10,7 @@ namespace Parser1.EF
 
         public DbSet<ScientistWork> ScientistsWork { get; set; } = null!;
         public DbSet<WorkOfScientist> WorkOfScientists { get; set; } = null!;
-
+        public DbSet<SubdirectionOfWork> SubdirectionOfWorks { get; set; } = null!;
         public ApplicationContext()
         {
         }
@@ -42,6 +42,13 @@ namespace Parser1.EF
                 .HasOne(bc => bc.WorkOfScientist)
                 .WithMany(c => c.ScientistsWorks)
                 .HasForeignKey(bc => bc.WorkOfScientistId);
+
+            modelBuilder.Entity<Direction>()
+                .HasMany(c => c.Subdirections)
+                .WithOne(e => e.Direction);
+
         }
     }
 }
+
+

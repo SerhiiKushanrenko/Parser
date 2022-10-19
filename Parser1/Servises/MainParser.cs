@@ -13,7 +13,8 @@ namespace Parser1.Servises
         private readonly ApplicationContext _context;
         private readonly ISupportParser _supportParser;
         private readonly IRatingServise _ratingServise;
-
+        private const string direction = "Педагогіка";
+        private const string url = @"http://nbuviap.gov.ua/bpnu/index.php?page=search";
         public MainParser(ApplicationContext context, ISupportParser supportParser, IRatingServise ratingServise, IWebDriver driver)
         {
             _context = context;
@@ -28,11 +29,8 @@ namespace Parser1.Servises
         /// <returns></returns>
         public void ParseGeneralInfo()
         {
-
-            _driver.Url = @"http://nbuviap.gov.ua/bpnu/index.php?page=search";
-            //конскт вынести
-
-            _driver.FindElement(By.XPath("//select[@name='galuz1']")).SendKeys("Педагогіка");
+            _driver.Url = url;
+            _driver.FindElement(By.XPath("//select[@name='galuz1']")).SendKeys(direction);
 
             Task.Delay(500);
 
@@ -50,6 +48,12 @@ namespace Parser1.Servises
 
                     var organization = _driver
                         .FindElements(By.XPath("/html/body/main/div[1]/table/tbody/tr/td[8]"));
+
+                    var dirtySubdirectionOfWork = _driver.FindElements(By.XPath($"//table/tbody/tr/td[contains(.,'{direction}')]")).Select(e => e.Text).ToList();
+
+                    var subdirectionOfWork = StrHelper.GetListSubdirection(dirtySubdirectionOfWork);
+
+                    _supportParser.AddSubDirectionToDb(subdirectionOfWork, direction);
 
                     Task.Delay(500);
 
