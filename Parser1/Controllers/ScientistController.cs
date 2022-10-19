@@ -32,9 +32,11 @@ namespace Parser1.Controllers
 
             if (user is null)
             {
-                _supportParser.GetGeneralInfo("педагогічні науки", "Педагогіка");
-                Thread.Sleep(2000);
-                return Ok();
+                return Ok($"Юзера с ID{id} нет в БД");
+
+                //_mainParser.ParseGeneralInfo();
+                //Thread.Sleep(2000);
+                //return Ok();
             }
             return Ok(user);
         }

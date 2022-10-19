@@ -28,14 +28,9 @@ namespace Parser1.Servises
         /// <returns></returns>
         public void ParseGeneralInfo()
         {
-            //List<Scientist> resultList = new();
 
             _driver.Url = @"http://nbuviap.gov.ua/bpnu/index.php?page=search";
             //конскт вынести
-
-            //var diractions = GetDirection();
-
-            //var random = new Random().Next(2, 12);
 
             _driver.FindElement(By.XPath("//select[@name='galuz1']")).SendKeys("Педагогіка");
 
@@ -51,7 +46,7 @@ namespace Parser1.Servises
                 {
                     var currentDiraction = _driver.FindElement(By.XPath("/html/body/main/div[1]/div[1]/div/div/div/table/tbody/tr/td[5]"));
 
-                    var names = _driver.FindElements(By.XPath("/html/body/main/div[1]/table/tbody/tr/td[3]")); //.GetAttribute("textContent");
+                    var names = _driver.FindElements(By.XPath("/html/body/main/div[1]/table/tbody/tr/td[3]"));
 
                     var organization = _driver
                         .FindElements(By.XPath("/html/body/main/div[1]/table/tbody/tr/td[8]"));
@@ -64,16 +59,18 @@ namespace Parser1.Servises
                     {
                         var rating = _ratingServise.GerRatingGoogleScholar(names[i].Text);
 
-                        var listOFWork = _supportParser.GetListOfWork(names[i].Text);
+                        var listOfWorkWithDegree = _supportParser.GetListOfWork(names[i].Text);
 
+                        var degree = listOfWorkWithDegree.degree;
                         var scientist = new Scientist()
                         {
                             Name = names.ElementAt(i).Text,
                             Organization = organization.ElementAt(i).Text,
                             DirectionId = directionId,
-                            Rating = rating
+                            Rating = rating,
+                            Degree = degree,
+
                         };
-                        //  resultList.Add(scientist);
                         var foundResult = _context.Scientists.Any(e => e.Name == scientist.Name);
 
                         if (!foundResult)
@@ -81,7 +78,7 @@ namespace Parser1.Servises
 
                             _context.Scientists.Add(scientist);
                             _context.SaveChanges();
-                            _supportParser.addWorktoScientist(scientist.Name, listOFWork);
+                            _supportParser.addWorktoScientist(scientist.Name, listOfWorkWithDegree.Item1);
                         }
                     }
 
@@ -106,7 +103,6 @@ namespace Parser1.Servises
             }
 
             _driver.Quit();
-            // return resultList;
         }
 
         /// <summary>

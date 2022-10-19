@@ -46,7 +46,7 @@ namespace Parser1.Controllers
         /// </summary>
         /// <param name="generalWork"></param>
         /// <returns></returns>
-        [HttpGet("generalWork")]
+        [HttpGet("ParserOnlyWork")]
         public IActionResult ParserOnlyWork(string direction)
         {
 

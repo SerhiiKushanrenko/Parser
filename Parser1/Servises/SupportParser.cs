@@ -20,7 +20,7 @@ namespace Parser1.Servises
             _driver = driver;
         }
 
-        public List<string> GetListOfWork(string name)
+        public (List<string>, string degree) GetListOfWork(string name)
         {
             List<string>? listOfWork;
             IWebDriver driver = new ChromeDriver();
@@ -37,9 +37,9 @@ namespace Parser1.Servises
                     "//table[contains(@class,'advanced')]//tbody//td[contains(.,'За вашим запитом нічого не знайдено, уточніть запит.')]//big"));
                 listOfWork = null;
 
-                _driver.Close();
-
-                return listOfWork;
+                driver.Close();
+                var result = (listOfWork, "null");
+                return result;
             }
             catch (Exception e)
             {
@@ -49,6 +49,9 @@ namespace Parser1.Servises
 
                 driver.FindElement(By.XPath("//a[@class='c']")).Click();
 
+                var dirtyDegree = driver.FindElement(By.XPath("//table[2]/tbody/tr[2]/td/table/tbody/tr/td[2]")).Text;
+
+                var degree = StrHelper.GetOnlyDegree(dirtyDegree);
                 Task.Delay(5000);
 
                 listOfWork =
@@ -59,7 +62,9 @@ namespace Parser1.Servises
 
                 driver.Quit();
 
-                return listOfWork;
+                var result = (listOfWork, degree);
+
+                return result;
             }
         }
 

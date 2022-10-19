@@ -59,6 +59,12 @@
             int sum = int.Parse(tempArray[0].Substring(9));
             return sum;
         }
+
+        public static string GetOnlyDegree(string degreeWithSomeInfo)
+        {
+            var result = degreeWithSomeInfo.Split(new char[] { '(', ')' });
+            return result[1];
+        }
     }
 }
 
