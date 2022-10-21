@@ -18,13 +18,13 @@ builder.Services.AddTransient<IRatingServise, RatingServise>();
 builder.Services.AddScoped<IWebDriver, ChromeDriver>();
 
 builder.Services.AddControllers();
-builder.Services.AddMassTransit(cfg =>
+/*builder.Services.AddMassTransit(cfg =>
 {
     cfg.UsingRabbitMq((context, x) =>
     {
         x.Host(new Uri(builder.Configuration["RabbitMQ:Uri"]));
     });
-});
+});*/
 //builder.Services.AddQuartzHostedService(cfg => cfg.WaitForJobsToComplete = true);
 
 //builder.Services.AddQuartzJobs(builder.Configuration);

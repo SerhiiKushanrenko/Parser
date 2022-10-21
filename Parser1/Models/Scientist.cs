@@ -4,12 +4,12 @@
     {
         public int Id { get; set; }
         public string Name { get; set; }
-        public string? Organization { get; set; }
+        //public string? Organization { get; set; }
         public string? Degree { get; set; }
         public int Rating { get; set; }
 
-        //public int? OrganizationId { get; set; }
-        //public Organization? Organization { get; set; }
+        public int? OrganizationId { get; set; }
+        public Organization? Organization { get; set; }
 
 
         public int DirectionId { get; set; }
@@ -23,7 +23,6 @@
         public ICollection<ScientistWork> ScientistsWorks { get; set; }
 
         public ICollection<SocialNetworkOfScientist> NetworkOfScientists { get; set; }
-        public ICollection<ScientistOrganisation> ScientistOrganisations { get; set; }
 
     }
 }
