@@ -73,7 +73,7 @@ namespace Parser1.Servises
         /// </summary>
         /// <param name="name"></param>
         /// <param name="listOfWork"></param>
-        public void addWorktoScientist(string name, List<string> listOfWork)
+        public void AddWorkToScientist(string name, List<string> listOfWork)
         {
             if (listOfWork is not null)
             {
@@ -81,14 +81,14 @@ namespace Parser1.Servises
                 {
                     var scientistFromDb = _context.Scientists.First(e => e.Name.Equals(name));
                     var workScientistFromDb =
-                        _context.WorkOfScientists.FirstOrDefault(e => e.Name == scientistWork);
+                        _context.Works.FirstOrDefault(e => e.Name == scientistWork);
 
                     if (workScientistFromDb is not null)
                     {
 
                         if (_context.ScientistsWork.Any(e =>
                                 e.ScientistId.Equals(scientistFromDb.Id) &
-                                e.WorkOfScientistId.Equals(workScientistFromDb.Id)))
+                                e.WorkId.Equals(workScientistFromDb.Id)))
                         {
                             continue;
                         }
@@ -97,7 +97,7 @@ namespace Parser1.Servises
                             ScientistWork newScientistWork = new()
                             {
                                 ScientistId = scientistFromDb.Id,
-                                WorkOfScientistId = workScientistFromDb.Id
+                                WorkId = workScientistFromDb.Id
                             };
                             _context.ScientistsWork.Add(newScientistWork);
 
@@ -106,12 +106,12 @@ namespace Parser1.Servises
                     }
                     else
                     {
-                        WorkOfScientist newWorkOfScientist = new WorkOfScientist()
+                        Work newWorkOfScientist = new Work()
                         {
                             Name = scientistWork,
                         };
 
-                        var work = _context.WorkOfScientists.Add(newWorkOfScientist);
+                        var work = _context.Works.Add(newWorkOfScientist);
 
 
                         _context.SaveChanges();
@@ -119,7 +119,7 @@ namespace Parser1.Servises
                         ScientistWork newScientistWork = new()
                         {
                             ScientistId = scientistFromDb.Id,
-                            WorkOfScientistId = work.Entity.Id
+                            WorkId = work.Entity.Id
                         };
                         _context.ScientistsWork.Add(newScientistWork);
 
@@ -198,14 +198,14 @@ namespace Parser1.Servises
                             {
                                 var scientistFromDb = _context.Scientists.First(e => e.Name.Equals(scientistName));
                                 var workScientistFromDb =
-                                    _context.WorkOfScientists.FirstOrDefault(e => e.Name == scientistWork);
+                                    _context.Works.FirstOrDefault(e => e.Name == scientistWork);
 
                                 if (workScientistFromDb is not null)
                                 {
 
                                     if (_context.ScientistsWork.Any(e =>
                                             e.ScientistId.Equals(scientistFromDb.Id) &
-                                            e.WorkOfScientistId.Equals(workScientistFromDb.Id)))
+                                            e.WorkId.Equals(workScientistFromDb.Id)))
                                     {
                                         continue;
                                     }
@@ -214,7 +214,7 @@ namespace Parser1.Servises
                                         ScientistWork newScientistWork = new()
                                         {
                                             ScientistId = scientistFromDb.Id,
-                                            WorkOfScientistId = workScientistFromDb.Id
+                                            WorkId = workScientistFromDb.Id
                                         };
                                         _context.ScientistsWork.Add(newScientistWork);
 
@@ -223,12 +223,12 @@ namespace Parser1.Servises
                                 }
                                 else
                                 {
-                                    WorkOfScientist newWorkOfScientist = new WorkOfScientist()
+                                    Work newWorkOfScientist = new Work()
                                     {
                                         Name = scientistWork,
                                     };
 
-                                    var work = _context.WorkOfScientists.Add(newWorkOfScientist);
+                                    var work = _context.Works.Add(newWorkOfScientist);
 
 
                                     _context.SaveChanges();
@@ -236,7 +236,7 @@ namespace Parser1.Servises
                                     ScientistWork newScientistWork = new()
                                     {
                                         ScientistId = scientistFromDb.Id,
-                                        WorkOfScientistId = work.Entity.Id
+                                        WorkId = work.Entity.Id
                                     };
                                     _context.ScientistsWork.Add(newScientistWork);
 
@@ -396,7 +396,7 @@ namespace Parser1.Servises
                 if (scientistFromDb is not null)
                 {
                     var workScientistFromDb =
-                        _context.WorkOfScientists.FirstOrDefault(e => e.Name == currentNameOfWork);
+                        _context.Works.FirstOrDefault(e => e.Name == currentNameOfWork);
 
                     if (workScientistFromDb is not null)
                     {
@@ -405,7 +405,7 @@ namespace Parser1.Servises
                         //    e.WorkOfScientistId == workScientistFromDb.Id);
                         if (_context.ScientistsWork.Any(e =>
                                 e.ScientistId.Equals(scientistFromDb.Id) &&
-                                e.WorkOfScientistId.Equals(workScientistFromDb.Id)))
+                                e.WorkId.Equals(workScientistFromDb.Id)))
                         {
                             continue;
                         }
@@ -414,7 +414,7 @@ namespace Parser1.Servises
                             ScientistWork newScientistWork = new()
                             {
                                 ScientistId = scientistFromDb.Id,
-                                WorkOfScientistId = workScientistFromDb.Id
+                                WorkId = workScientistFromDb.Id
                             };
                             _context.ScientistsWork.Add(newScientistWork);
 
@@ -423,20 +423,20 @@ namespace Parser1.Servises
                     }
                     else
                     {
-                        WorkOfScientist newWorkOfScientist = new()
+                        Work newWorkOfScientist = new()
                         {
                             Name = currentNameOfWork,
                             Year = yearOfWork
                         };
 
-                        var work = _context.WorkOfScientists.Add(newWorkOfScientist);
+                        var work = _context.Works.Add(newWorkOfScientist);
 
                         _context.SaveChanges();
 
                         ScientistWork newScientistWork = new()
                         {
                             ScientistId = scientistFromDb.Id,
-                            WorkOfScientistId = work.Entity.Id
+                            WorkId = work.Entity.Id
                         };
                         _context.ScientistsWork.Add(newScientistWork);
 
@@ -449,24 +449,24 @@ namespace Parser1.Servises
                     var scientist = new Scientist()
                     {
                         Name = scientistName,
-                        Organization = organization,
+                        // Organization = organization,
                         DirectionId = directionId,
                     };
                     _context.Scientists.Add(scientist);
 
 
-                    WorkOfScientist newWorkOfScientist = new()
+                    Work newWorkOfScientist = new()
                     {
                         Name = currentNameOfWork,
                         Year = yearOfWork
                     };
 
-                    var work = _context.WorkOfScientists.Add(newWorkOfScientist);
+                    var work = _context.Works.Add(newWorkOfScientist);
 
                     ScientistWork newScientistWork = new()
                     {
                         ScientistId = scientist.Id,
-                        WorkOfScientistId = work.Entity.Id
+                        WorkId = work.Entity.Id
                     };
                     _context.ScientistsWork.Add(newScientistWork);
 
@@ -476,24 +476,101 @@ namespace Parser1.Servises
         }
 
 
-        public void AddSubDirectionToDb(List<string> subDirection, string direction)
+        public void AddScietistSubdirAndAddDirectionToDb(List<string> subDirection, string direction, string scientistName)
         {
             var directionId = _context.Directions.FirstOrDefault(e => e.Name.Equals(direction))!.Id;
 
             foreach (var sub in subDirection)
             {
-                if (!_context.SubdirectionOfWorks.Any(e => e.Name == sub))
+                if (!_context.Subdirections.Any(e => e.Title == sub))
                 {
-                    SubdirectionOfWork newSub = new SubdirectionOfWork()
+                    Subdirection newSub = new Subdirection()
                     {
-                        Name = sub,
+                        Title = sub,
                         DirectionId = directionId
 
                     };
-                    _context.SubdirectionOfWorks.Add(newSub);
+                    _context.Subdirections.Add(newSub);
+                    _context.SaveChanges();
+
+                    AddScientistSubdirection(scientistName, newSub.Title);
+                }
+            }
+        }
+
+        public void AddScientistSubdirection(string scientistName, string subdirectionTitle)
+        {
+            var scientistId = _context.Scientists.FirstOrDefault(e => e.Name.Equals(scientistName))!.Id;
+            var subDirectionId = _context.Subdirections.FirstOrDefault(e => e.Title == subdirectionTitle)!.Id;
+
+            ScientistSubdirection scientistSubdirection = new ScientistSubdirection()
+            {
+                ScientistId = scientistId,
+                SubdirectionId = subDirectionId
+            };
+            _context.ScientistSubdirections.Add(scientistSubdirection);
+            _context.SaveChanges();
+        }
+
+        public void AddSocialNetworkToScientist(List<string> listOfSocial, string scientistName)
+        {
+            var scientist = _context.Scientists.FirstOrDefault(e => e.Name.Equals(scientistName));
+            foreach (var url in listOfSocial)
+            {
+                if (url is not null)
+                {
+                    SocialNetworkOfScientist networkOfScientist = new SocialNetworkOfScientist()
+                    {
+                        Url = url,
+                        ScientistId = scientist.Id
+                    };
+                    scientist.NetworkOfScientists.Add(networkOfScientist);
+                    _context.SocialNetworkOfScientists.Add(networkOfScientist);
                     _context.SaveChanges();
                 }
             }
+        }
+        public List<string> GetSocialNetwork(string scientistName)
+        {
+            var netWorks = new List<string>()
+            {
+                $"//td[contains(.,\"{scientistName}\")]/../td/a[contains(@href,'google')]",
+                $"//td[contains(.,\"{scientistName}\")]/../td/a[contains(@href,'scopus')]",
+                $"//td[contains(.,\"{scientistName}\")]/../td/a[contains(@href,'wos')]"
+            };
+
+            var result = new List<string>();
+            foreach (var netWork in netWorks)
+            {
+                var netWorkUrl = GetSocialUrl(netWork);
+                if (!string.IsNullOrEmpty(netWorkUrl))
+                {
+                    result.Add(netWorkUrl);
+                }
+
+            }
+            return result;
+        }
+
+        public string GetSocialUrl(string socialElement)
+        {
+            string? socialUrl = null;
+            try
+            {
+                var isExistUrl = _driver.FindElement(By.XPath($"{socialElement}")).GetAttribute("href");
+                if (!String.IsNullOrEmpty(isExistUrl))
+                {
+                    socialUrl = isExistUrl;
+
+                    return socialUrl;
+                }
+            }
+            catch (Exception e)
+            {
+                return socialUrl;
+            }
+
+            return socialUrl;
         }
     }
 }

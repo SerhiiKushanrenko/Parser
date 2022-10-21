@@ -1,6 +1,6 @@
 ﻿namespace Parser1.Models
 {
-    public class WorkOfScientist
+    public class Work
     {
         public int Id { get; set; }
 

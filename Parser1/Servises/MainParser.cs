@@ -53,7 +53,7 @@ namespace Parser1.Servises
 
                     var subdirectionOfWork = StrHelper.GetListSubdirection(dirtySubdirectionOfWork);
 
-                    _supportParser.AddSubDirectionToDb(subdirectionOfWork, direction);
+
 
                     Task.Delay(500);
 
@@ -63,26 +63,32 @@ namespace Parser1.Servises
                     {
                         var rating = _ratingServise.GerRatingGoogleScholar(names[i].Text);
 
+                        var ListOfSocial = _supportParser.GetSocialNetwork(names[i].Text);
+
                         var listOfWorkWithDegree = _supportParser.GetListOfWork(names[i].Text);
 
                         var degree = listOfWorkWithDegree.degree;
+
                         var scientist = new Scientist()
                         {
                             Name = names.ElementAt(i).Text,
-                            Organization = organization.ElementAt(i).Text,
+                            // Organization = organization.ElementAt(i).Text,
                             DirectionId = directionId,
                             Rating = rating,
                             Degree = degree,
 
+
                         };
                         var foundResult = _context.Scientists.Any(e => e.Name == scientist.Name);
 
-                        if (!foundResult)
+                        if (foundResult)
                         {
 
                             _context.Scientists.Add(scientist);
                             _context.SaveChanges();
-                            _supportParser.addWorktoScientist(scientist.Name, listOfWorkWithDegree.Item1);
+                            _supportParser.AddWorkToScientist(scientist.Name, listOfWorkWithDegree.Item1);
+                            _supportParser.AddScietistSubdirAndAddDirectionToDb(subdirectionOfWork, direction, scientist.Name);
+                            _supportParser.AddSocialNetworkToScientist(ListOfSocial, scientist.Name);
                         }
                     }
 
@@ -224,7 +230,7 @@ namespace Parser1.Servises
                     var scientist = new Scientist()
                     {
                         Name = names.ElementAt(i).Text,
-                        Organization = organization.ElementAt(i).Text,
+                        //Organization = organization.ElementAt(i).Text,
                         DirectionId = directionId,
                     };
 

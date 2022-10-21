@@ -70,8 +70,8 @@ namespace Parser1.Controllers
         {
             try
             {
-                var workOfScientistId = _context.WorkOfScientists.FirstOrDefault(e => e.Name.Equals(generalWork))!.Id;
-                var scientists = _context.ScientistsWork.Where(e => e.WorkOfScientistId == workOfScientistId).Select(q => q.Scientist).ToList();
+                var workOfScientistId = _context.Works.FirstOrDefault(e => e.Name.Equals(generalWork))!.Id;
+                var scientists = _context.ScientistsWork.Where(e => e.WorkId == workOfScientistId).Select(q => q.Scientist).ToList();
                 return Ok(scientists);
             }
             catch (System.NullReferenceException e)
@@ -109,8 +109,8 @@ namespace Parser1.Controllers
         {
             try
             {
-                List<Scientist> scientists = _context.Scientists.Where(e => e.Organization == organization).ToList();
-                return Ok(scientists);
+                // List<Scientist> scientists = _context.Scientists.Where(e => e.Organization == organization).ToList();
+                return Ok();
             }
             catch (Exception e)
             {

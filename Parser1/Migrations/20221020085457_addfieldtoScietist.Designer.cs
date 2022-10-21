@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Parser1.EF;
@@ -11,9 +12,10 @@ using Parser1.EF;
 namespace Parser1.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    partial class ApplicationContextModelSnapshot : ModelSnapshot
+    [Migration("20221020085457_addfieldtoScietist")]
+    partial class addfieldtoScietist
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -35,7 +37,7 @@ namespace Parser1.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Directions", (string)null);
+                    b.ToTable("Directions");
                 });
 
             modelBuilder.Entity("Parser1.Models.Scientist", b =>
@@ -62,26 +64,16 @@ namespace Parser1.Migrations
                     b.Property<int>("Rating")
                         .HasColumnType("integer");
 
+                    b.Property<int?>("SubdirectioOsWorkId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("DirectionId");
 
-                    b.ToTable("Scientists", (string)null);
-                });
+                    b.HasIndex("SubdirectioOsWorkId");
 
-            modelBuilder.Entity("Parser1.Models.ScientistSubdirection", b =>
-                {
-                    b.Property<int>("ScientistId")
-                        .HasColumnType("integer");
-
-                    b.Property<int?>("SubdirectionId")
-                        .HasColumnType("integer");
-
-                    b.HasKey("ScientistId", "SubdirectionId");
-
-                    b.HasIndex("SubdirectionId");
-
-                    b.ToTable("ScientistSubdirections", (string)null);
+                    b.ToTable("Scientists");
                 });
 
             modelBuilder.Entity("Parser1.Models.ScientistWork", b =>
@@ -96,32 +88,10 @@ namespace Parser1.Migrations
 
                     b.HasIndex("WorkOfScientistId");
 
-                    b.ToTable("ScientistsWork", (string)null);
+                    b.ToTable("ScientistsWork");
                 });
 
-            modelBuilder.Entity("Parser1.Models.SocialNetworkOfScientist", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ScientistId")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("Url")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ScientistId");
-
-                    b.ToTable("NetworkOfScientists", (string)null);
-                });
-
-            modelBuilder.Entity("Parser1.Models.Subdirection", b =>
+            modelBuilder.Entity("Parser1.Models.SubdirectionOfWork", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -132,7 +102,7 @@ namespace Parser1.Migrations
                     b.Property<int>("DirectionId")
                         .HasColumnType("integer");
 
-                    b.Property<string>("Title")
+                    b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("text");
 
@@ -140,7 +110,7 @@ namespace Parser1.Migrations
 
                     b.HasIndex("DirectionId");
 
-                    b.ToTable("Subdirection", (string)null);
+                    b.ToTable("SubdirectionOfWorks");
                 });
 
             modelBuilder.Entity("Parser1.Models.WorkOfScientist", b =>
@@ -160,7 +130,7 @@ namespace Parser1.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("WorkOfScientists", (string)null);
+                    b.ToTable("WorkOfScientists");
                 });
 
             modelBuilder.Entity("Parser1.Models.Scientist", b =>
@@ -171,26 +141,13 @@ namespace Parser1.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Parser1.Models.SubdirectionOfWork", "SubdirectionOfWork")
+                        .WithMany("Scientists")
+                        .HasForeignKey("SubdirectioOsWorkId");
+
                     b.Navigation("Direction");
-                });
 
-            modelBuilder.Entity("Parser1.Models.ScientistSubdirection", b =>
-                {
-                    b.HasOne("Parser1.Models.Scientist", "Scientist")
-                        .WithMany("ScientistSubdirections")
-                        .HasForeignKey("ScientistId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("Parser1.Models.Subdirection", "Subdirection")
-                        .WithMany("ScientistSubdirections")
-                        .HasForeignKey("SubdirectionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Scientist");
-
-                    b.Navigation("Subdirection");
+                    b.Navigation("SubdirectionOfWork");
                 });
 
             modelBuilder.Entity("Parser1.Models.ScientistWork", b =>
@@ -212,18 +169,7 @@ namespace Parser1.Migrations
                     b.Navigation("WorkOfScientist");
                 });
 
-            modelBuilder.Entity("Parser1.Models.SocialNetworkOfScientist", b =>
-                {
-                    b.HasOne("Parser1.Models.Scientist", "Scientist")
-                        .WithMany("NetworkOfScientists")
-                        .HasForeignKey("ScientistId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Scientist");
-                });
-
-            modelBuilder.Entity("Parser1.Models.Subdirection", b =>
+            modelBuilder.Entity("Parser1.Models.SubdirectionOfWork", b =>
                 {
                     b.HasOne("Parser1.Models.Direction", "Direction")
                         .WithMany("Subdirections")
@@ -241,16 +187,12 @@ namespace Parser1.Migrations
 
             modelBuilder.Entity("Parser1.Models.Scientist", b =>
                 {
-                    b.Navigation("NetworkOfScientists");
-
-                    b.Navigation("ScientistSubdirections");
-
                     b.Navigation("ScientistsWorks");
                 });
 
-            modelBuilder.Entity("Parser1.Models.Subdirection", b =>
+            modelBuilder.Entity("Parser1.Models.SubdirectionOfWork", b =>
                 {
-                    b.Navigation("ScientistSubdirections");
+                    b.Navigation("Scientists");
                 });
 
             modelBuilder.Entity("Parser1.Models.WorkOfScientist", b =>

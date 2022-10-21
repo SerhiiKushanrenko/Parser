@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Parser1.EF;
@@ -11,9 +12,10 @@ using Parser1.EF;
 namespace Parser1.Migrations
 {
     [DbContext(typeof(ApplicationContext))]
-    partial class ApplicationContextModelSnapshot : ModelSnapshot
+    [Migration("20221021082309_changeRelations")]
+    partial class changeRelations
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -35,7 +37,7 @@ namespace Parser1.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Directions", (string)null);
+                    b.ToTable("Directions");
                 });
 
             modelBuilder.Entity("Parser1.Models.Scientist", b =>
@@ -66,7 +68,7 @@ namespace Parser1.Migrations
 
                     b.HasIndex("DirectionId");
 
-                    b.ToTable("Scientists", (string)null);
+                    b.ToTable("Scientists");
                 });
 
             modelBuilder.Entity("Parser1.Models.ScientistSubdirection", b =>
@@ -81,7 +83,7 @@ namespace Parser1.Migrations
 
                     b.HasIndex("SubdirectionId");
 
-                    b.ToTable("ScientistSubdirections", (string)null);
+                    b.ToTable("ScientistSubdirections");
                 });
 
             modelBuilder.Entity("Parser1.Models.ScientistWork", b =>
@@ -96,7 +98,7 @@ namespace Parser1.Migrations
 
                     b.HasIndex("WorkOfScientistId");
 
-                    b.ToTable("ScientistsWork", (string)null);
+                    b.ToTable("ScientistsWork");
                 });
 
             modelBuilder.Entity("Parser1.Models.SocialNetworkOfScientist", b =>
@@ -118,7 +120,7 @@ namespace Parser1.Migrations
 
                     b.HasIndex("ScientistId");
 
-                    b.ToTable("NetworkOfScientists", (string)null);
+                    b.ToTable("NetworkOfScientists");
                 });
 
             modelBuilder.Entity("Parser1.Models.Subdirection", b =>
@@ -140,7 +142,7 @@ namespace Parser1.Migrations
 
                     b.HasIndex("DirectionId");
 
-                    b.ToTable("Subdirection", (string)null);
+                    b.ToTable("Subdirection");
                 });
 
             modelBuilder.Entity("Parser1.Models.WorkOfScientist", b =>
@@ -160,7 +162,7 @@ namespace Parser1.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("WorkOfScientists", (string)null);
+                    b.ToTable("WorkOfScientists");
                 });
 
             modelBuilder.Entity("Parser1.Models.Scientist", b =>

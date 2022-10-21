@@ -5,6 +5,6 @@
         public int Id { get; set; }
         public string? Name { get; set; }
 
-        public ICollection<SubdirectionOfWork> Subdirections { get; set; }
+        public ICollection<Subdirection> Subdirections { get; set; }
     }
 }
