@@ -2,13 +2,13 @@
 {
     public interface IMainParser
     {
-        public void ParseGeneralInfo();
+        public Task ParseGeneralInfo();
 
-        public List<string> GetDirection();
+        public Task<List<string>> GetDirection();
 
-        public void CheckOnEquals(string direction);
+        public Task CheckOnEquals(string direction);
 
-        void ParseNewScientist(string direction);
+        Task ParseNewScientist(string direction);
 
 
 

@@ -1,6 +1,5 @@
 ﻿using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using Parser1.EF;
 using Parser1.Helpers;
 using Parser1.Interfaces;
 
@@ -9,10 +8,8 @@ namespace Parser1.Servises
     public class RatingServise : IRatingServise
     {
         private readonly IWebDriver _driver;
-        private readonly ApplicationContext _context;
-        public RatingServise(ApplicationContext context, IWebDriver driver)
+        public RatingServise(IWebDriver driver)
         {
-            _context = context;
             _driver = driver;
         }
 

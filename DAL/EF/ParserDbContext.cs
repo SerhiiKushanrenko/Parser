@@ -1,9 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
-using Parser1.Models;
+﻿using DAL.Models;
+using Microsoft.EntityFrameworkCore;
 
-namespace Parser1.EF
+namespace DAL.EF
 {
-    public class ApplicationContext : DbContext
+    public class ParserDbContext : DbContext
     {
         public DbSet<Direction> Directions { get; set; } = null!;
         public DbSet<Scientist> Scientists { get; set; } = null!;
@@ -15,11 +15,11 @@ namespace Parser1.EF
 
         public DbSet<SocialNetworkOfScientist> SocialNetworkOfScientists { get; set; } = null!;
 
-        public ApplicationContext()
+        public ParserDbContext()
         {
         }
 
-        public ApplicationContext(DbContextOptions<ApplicationContext> options)
+        public ParserDbContext(DbContextOptions<ParserDbContext> options)
             : base(options)
         {
         }
@@ -28,8 +28,6 @@ namespace Parser1.EF
         {
 
             optionsBuilder.UseNpgsql();
-            //"Host=localhost;Port=5432;Database=papserDB;Username=postgres;Password=111116"
-            //"Server=pasrerapi.postgres.database.azure.com;Database=postgres;Port=5432;User Id=Serg;Password=123456789Kk;Ssl Mode=Allow;"
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

@@ -5,7 +5,9 @@ VisualStudioVersion = 17.2.32630.192
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Consumer", "Consumer\Consumer.csproj", "{63144EFD-503C-466B-8D59-2933212B1C47}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Parser1", "Parser1\Parser1.csproj", "{89777D32-33CC-4A09-8822-68BFE4FCDB6F}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Parser", "Parser1\Parser.csproj", "{89777D32-33CC-4A09-8822-68BFE4FCDB6F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DAL", "DAL\DAL.csproj", "{BF65F703-6144-4469-89B5-89C50847A99A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{89777D32-33CC-4A09-8822-68BFE4FCDB6F}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{89777D32-33CC-4A09-8822-68BFE4FCDB6F}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{89777D32-33CC-4A09-8822-68BFE4FCDB6F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BF65F703-6144-4469-89B5-89C50847A99A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BF65F703-6144-4469-89B5-89C50847A99A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BF65F703-6144-4469-89B5-89C50847A99A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BF65F703-6144-4469-89B5-89C50847A99A}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

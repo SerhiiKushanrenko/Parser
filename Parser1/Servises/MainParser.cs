@@ -1,48 +1,56 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using OpenQA.Selenium;
-using Parser1.EF;
 using Parser1.Helpers;
 using Parser1.Interfaces;
-using Parser1.Models;
+using DAL.Models;
+using DAL.Repositories;
+using DAL.AdditionalModels;
 
 namespace Parser1.Servises
 {
     public class MainParser : IMainParser
     {
         private readonly IWebDriver _driver;
-        private readonly ApplicationContext _context;
+        private readonly IDirectionRepository _directionRepository;
+        private readonly IScientistRepository _scientistRepository;
         private readonly ISupportParser _supportParser;
         private readonly IRatingServise _ratingServise;
         private const string direction = "Педагогіка";
         private const string url = @"http://nbuviap.gov.ua/bpnu/index.php?page=search";
-        public MainParser(ApplicationContext context, ISupportParser supportParser, IRatingServise ratingServise, IWebDriver driver)
+        public MainParser(
+            ISupportParser supportParser,
+            IRatingServise ratingServise,
+            IWebDriver driver,
+            IDirectionRepository directionRepository,
+            IScientistRepository scientistRepository)
         {
-            _context = context;
             _supportParser = supportParser;
             _ratingServise = ratingServise;
             _driver = driver;
+            _directionRepository = directionRepository;            _scientistRepository = scientistRepository;
+
         }
 
         /// <summary>
         /// the main parser 
         /// </summary>
         /// <returns></returns>
-        public void ParseGeneralInfo()
+        public async Task ParseGeneralInfo()
         {
             _driver.Url = url;
             _driver.FindElement(By.XPath("//select[@name='galuz1']")).SendKeys(direction);
 
-            Task.Delay(500);
+            await Task.Delay(500);
 
             try
             {
                 _driver.FindElement(By.XPath("//input[@class='btn btn-primary mb-2']")).Click();
 
-                Task.Delay(4000);
+                await Task.Delay(4000);
 
                 while (true)
                 {
-                    var currentDiraction = _driver.FindElement(By.XPath("/html/body/main/div[1]/div[1]/div/div/div/table/tbody/tr/td[5]"));
+                    var currentDirection = _driver.FindElement(By.XPath("/html/body/main/div[1]/div[1]/div/div/div/table/tbody/tr/td[5]"));
 
                     var names = _driver.FindElements(By.XPath("/html/body/main/div[1]/table/tbody/tr/td[3]"));
 
@@ -55,9 +63,9 @@ namespace Parser1.Servises
 
 
 
-                    Task.Delay(500);
+                    await Task.Delay(500);
 
-                    var directionId = _context.Directions.FirstOrDefault(e => e.Name.Equals(currentDiraction.Text))!.Id;
+                    var directionId = (await _directionRepository.GetAsync(currentDirection.Text))!.Id;
 
                     for (int i = 0; i < names.Count; i++)
                     {
@@ -79,13 +87,12 @@ namespace Parser1.Servises
 
 
                         };
-                        var foundResult = _context.Scientists.Any(e => e.Name == scientist.Name);
+                        var foundResult = await _scientistRepository.GetAsync(scientist.Name) is not null;
 
                         if (foundResult)
                         {
 
-                            _context.Scientists.Add(scientist);
-                            _context.SaveChanges();
+                            await _scientistRepository.CreateAsync(scientist);
                             _supportParser.AddWorkToScientist(scientist.Name, listOfWorkWithDegree.Item1);
                             _supportParser.AddScietistSubdirAndAddDirectionToDb(subdirectionOfWork, direction, scientist.Name);
                             _supportParser.AddSocialNetworkToScientist(ListOfSocial, scientist.Name);
@@ -119,75 +126,71 @@ namespace Parser1.Servises
         /// Get and check current directions 
         /// </summary>
         /// <returns></returns>
-        public List<string> GetDirection()
+        public async Task<List<string>> GetDirection()
         {
             _driver.Url = @"http://nbuviap.gov.ua/bpnu/index.php?page=search";
 
-            var diractions = _driver.FindElements(By.XPath("//*[@id=\"galuz1\"]/option"));
-            List<string> directionArray = new List<string>();
+            var directionsElements = _driver.FindElements(By.XPath("//*[@id=\"galuz1\"]/option"));
+            var foundDirections = new List<string>();
 
-            foreach (var direction in diractions)
+            foreach (var direction in directionsElements)
             {
-                if (String.IsNullOrEmpty(direction.Text))
+                if (string.IsNullOrEmpty(direction.Text))
                 {
                     continue;
                 }
-                directionArray.Add(direction.Text);
+                foundDirections.Add(direction.Text);
             }
 
-            if (directionArray.Count == _context.Directions.Count()) return directionArray;
+            if (foundDirections.Count == await _directionRepository.GetCountAsync())
+                return foundDirections;
+
+            var existingDirections = await _directionRepository.GetDirectionsAsync();
+            var nonExistingDirections = foundDirections
+                .Where(foundDirection => !existingDirections.Any(existingDirection => existingDirection.Name.Equals(foundDirection)));
+
+            await _directionRepository.CreateAsync(nonExistingDirections.Select(directionName => new Direction()
             {
-                foreach (var diraction in directionArray)
-                {
-                    if (!_context.Directions.Any(e => e.Name == diraction))
-                    {
-                        Direction direction = new Direction()
-                        {
-                            Name = diraction
-                        };
-                        _context.Directions.Add(direction);
-                        _context.SaveChanges();
-                    }
-                }
-            }
-            return directionArray;
+                Name = directionName
+            }));
+
+            return foundDirections;
         }
 
         /// <summary>
         /// Check current count Scientists on DB and Site 
         /// </summary>
         /// <param name="direction"></param>
-        public void CheckOnEquals(string direction)
+        public async Task CheckOnEquals(string direction)
         {
             int directionId;
-            List<Scientist> totalScientistsOnDb;
 
             _driver.Url = @"http://nbuviap.gov.ua/bpnu/index.php?page=search";
 
             _driver.FindElement(By.XPath("//select[@name='galuz1']")).SendKeys(direction);
 
-            Task.Delay(500);
+            await Task.Delay(500);
 
             _driver.FindElement(By.XPath("//input[@class='btn btn-primary mb-2']")).Click();
 
-            Task.Delay(4000);
+            await Task.Delay(4000);
 
             var totalCount = _driver.FindElement(By.XPath("/html/body/main/div[1]/div[2]/div/div"));
-            var totalSumOnCite = StrHelper.GetSumFromString(totalCount.Text);
+            var totalSumOnSite = StrHelper.GetSumFromString(totalCount.Text);
 
             try
             {
-                directionId = _context.Directions.FirstOrDefault(e => e.Name.Equals(direction)).Id;
-                totalScientistsOnDb = _context.Scientists.Where(e => e.DirectionId == directionId).ToList();
+                directionId = (await _directionRepository.GetAsync(direction))!.Id;
+                var scientistsCount = await _scientistRepository.GetScientistsCountAsync(new ScientistFilter { DirectionId = directionId });
 
-                if (totalSumOnCite != totalScientistsOnDb.Count())
+                if (totalSumOnSite != scientistsCount)
                 {
-                    ParseNewScientist(direction);
+                    await ParseNewScientist(direction);
                 }
             }
             catch (Exception e)
             {
-                // ДОДЕЛАТЬ !!!!
+                //TODO
                 string a = $"{e.Message} такого направления нет ";
                 throw;
             }
@@ -198,48 +201,51 @@ namespace Parser1.Servises
         /// Parse new Scientists on current direction
         /// </summary>
         /// <param name="direction"></param>
-        public void ParseNewScientist(string direction)
+        public async Task ParseNewScientist(string direction)
         {
             _driver.Url = @"http://nbuviap.gov.ua/bpnu/index.php?page=search";
 
             _driver.FindElement(By.XPath("//select[@name='galuz1']")).SendKeys(direction);
 
-            Task.Delay(500);
+            await Task.Delay(500);
 
 
             _driver.FindElement(By.XPath("//input[@class='btn btn-primary mb-2']")).Click();
 
-            Task.Delay(4000);
-
+            await Task.Delay(4000);
+            var existingScientists = await _scientistRepository.GetScientistsListAsync();
+            var existingDirections = await _directionRepository.GetDirectionsAsync();
+            var scientistsToCreate = new List<Scientist>();
             while (true)
             {
-                var currentDiraction = _driver.FindElement(By.XPath("/html/body/main/div[1]/div[1]/div/div/div/table/tbody/tr/td[5]"));
+                var currentDirection = _driver.FindElement(By.XPath("/html/body/main/div[1]/div[1]/div/div/div/table/tbody/tr/td[5]"));
 
-                var names = _driver.FindElements(By.XPath("/html/body/main/div[1]/table/tbody/tr/td[3]")); //.GetAttribute("textContent");
+                var scientistsNames = _driver.FindElements(By.XPath("/html/body/main/div[1]/table/tbody/tr/td[3]")).ToList(); //.GetAttribute("textContent");
 
                 var organization = _driver
                     .FindElements(By.XPath("/html/body/main/div[1]/table/tbody/tr/td[8]"));
 
-                Task.Delay(500);
-
-                var directionId = _context.Directions.FirstOrDefault(e => e.Name.Equals(currentDiraction.Text)).Id;
-
-
-                for (int i = 0; i < names.Count; i++)
+                await Task.Delay(500);
+                
+                var directionId = existingDirections.FirstOrDefault(existingDirection => existingDirection.Name.Equals(currentDirection.Text))?.Id;
+                if (directionId != null)
                 {
-                    var scientist = new Scientist()
-                    {
-                        Name = names.ElementAt(i).Text,
-                        //Organization = organization.ElementAt(i).Text,
-                        DirectionId = directionId,
-                    };
-
-                    if (!_context.Scientists.Contains(scientist))
-                    {
-                        _context.Scientists.Add(scientist);
-                        _context.SaveChanges();
-                    }
+                    //TODO
+                    // А что делать если ее в базе нет?))
                 }
+
+                scientistsNames.ForEach(scientistName => 
+                {
+                    if (!existingScientists.Any(existingScientist => existingScientist.Name.Equals(scientistName.Text)))
+                    {
+                        scientistsToCreate.Add(new Scientist()
+                        {
+                            Name = scientistName.Text,
+                            //Organization = organization.ElementAt(i).Text,
+                            DirectionId = directionId.Value,
+                        });
+                    }
+                });
 
                 try
                 {
@@ -250,7 +256,7 @@ namespace Parser1.Servises
                     break;
                 }
             }
-
+            await _scientistRepository.CreateAsync(scientistsToCreate);
             _driver.Quit();
         }
 

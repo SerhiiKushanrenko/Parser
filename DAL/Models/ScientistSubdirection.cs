@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace Parser1.Models
+namespace DAL.Models
 {
     public class ScientistSubdirection
     {
