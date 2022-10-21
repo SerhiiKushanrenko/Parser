@@ -11,23 +11,25 @@ namespace Parser1.Servises
     public class MainParser : IMainParser
     {
         private readonly IWebDriver _driver;
-        private readonly IDirectionRepository _directionRepository;
+        private readonly IFieldOfResearchRepository _fieldOfResearchRepository;
         private readonly IScientistRepository _scientistRepository;
         private readonly ISupportParser _supportParser;
         private readonly IRatingServise _ratingServise;
-        private const string direction = "Педагогіка";
-        private const string url = @"http://nbuviap.gov.ua/bpnu/index.php?page=search";
+
+        //bibliometrics - we are going to take scientist names + social networks
+        private const string URL = @"http://nbuviap.gov.ua/bpnu/index.php?page=search"; 
+
         public MainParser(
             ISupportParser supportParser,
             IRatingServise ratingServise,
             IWebDriver driver,
-            IDirectionRepository directionRepository,
+            IFieldOfResearchRepository fieldOfResearchRepository,
             IScientistRepository scientistRepository)
         {
             _supportParser = supportParser;
             _ratingServise = ratingServise;
             _driver = driver;
-            _directionRepository = directionRepository;            _scientistRepository = scientistRepository;
+            _fieldOfResearchRepository = fieldOfResearchRepository;            _scientistRepository = scientistRepository;
 
         }
 
@@ -35,67 +37,61 @@ namespace Parser1.Servises
         /// the main parser 
         /// </summary>
         /// <returns></returns>
-        public async Task ParseGeneralInfo()
+        public async Task StartParsing()
         {
-            _driver.Url = url;
-            _driver.FindElement(By.XPath("//select[@name='galuz1']")).SendKeys(direction);
+            #region parse Scientist information (name, social networks) from nbuviap
+            _driver.Url = URL;
 
             await Task.Delay(500);
 
             try
             {
                 _driver.FindElement(By.XPath("//input[@class='btn btn-primary mb-2']")).Click();
-
+                
                 await Task.Delay(4000);
 
                 while (true)
                 {
-                    var currentDirection = _driver.FindElement(By.XPath("/html/body/main/div[1]/div[1]/div/div/div/table/tbody/tr/td[5]"));
+                    //var currentFieldOfResearch = _driver.FindElement(By.XPath("/html/body/main/div[1]/div[1]/div/div/div/table/tbody/tr/td[5]"));
 
-                    var names = _driver.FindElements(By.XPath("/html/body/main/div[1]/table/tbody/tr/td[3]"));
+                    var scientistsNamesElements = _driver.FindElements(By.XPath("/html/body/main/div[1]/table/tbody/tr/td[3]"));
 
-                    var organization = _driver
-                        .FindElements(By.XPath("/html/body/main/div[1]/table/tbody/tr/td[8]"));
+                    /*var organizationsElements = _driver
+                        .FindElements(By.XPath("/html/body/main/div[1]/table/tbody/tr/td[8]"));*/
 
-                    var dirtySubdirectionOfWork = _driver.FindElements(By.XPath($"//table/tbody/tr/td[contains(.,'{direction}')]")).Select(e => e.Text).ToList();
+                    //var dirtySubdirectionOfWork = _driver.FindElements(By.XPath($"//table/tbody/tr/td[contains(.,'{direction}')]")).Select(e => e.Text).ToList();
 
-                    var subdirectionOfWork = StrHelper.GetListSubdirection(dirtySubdirectionOfWork);
+                    //var subdirectionOfWork = StrHelper.GetListSubdirection(dirtySubdirectionOfWork);
 
+                    //var directionId = (await _fieldOfResearchRepository.GetAsync(currentFieldOfResearch.Text))!.Id;
 
-
-                    await Task.Delay(500);
-
-                    var directionId = (await _directionRepository.GetAsync(currentDirection.Text))!.Id;
-
-                    for (int i = 0; i < names.Count; i++)
+                    for (int i = 0; i < scientistsNamesElements.Count; i++)
                     {
-                        var rating = _ratingServise.GerRatingGoogleScholar(names[i].Text);
+                        //var rating = _ratingServise.GerRatingGoogleScholar(scientistsNamesElements[i].Text);
 
-                        var ListOfSocial = _supportParser.GetSocialNetwork(names[i].Text);
+                        var listOfSocial = _supportParser.GetSocialNetwork(scientistsNamesElements[i].Text);
 
-                        var listOfWorkWithDegree = _supportParser.GetListOfWork(names[i].Text);
+                        //var listOfWorkWithDegree = _supportParser.GetListOfWork(scientistsNamesElements[i].Text);
 
-                        var degree = listOfWorkWithDegree.degree;
+                        //var degree = listOfWorkWithDegree.degree;
 
                         var scientist = new Scientist()
                         {
-                            Name = names.ElementAt(i).Text,
-                            // Organization = organization.ElementAt(i).Text,
-                            DirectionId = directionId,
-                            Rating = rating,
-                            Degree = degree,
+                            Name = scientistsNamesElements.ElementAt(i).Text,
+                            //Degree = degree,
+                            ScientistSocialNetworks = listOfSocial
 
 
                         };
                         var foundResult = await _scientistRepository.GetAsync(scientist.Name) is not null;
 
-                        if (foundResult)
+                        if (!foundResult)
                         {
 
                             await _scientistRepository.CreateAsync(scientist);
-                            _supportParser.AddWorkToScientist(scientist.Name, listOfWorkWithDegree.Item1);
-                            _supportParser.AddScietistSubdirAndAddDirectionToDb(subdirectionOfWork, direction, scientist.Name);
-                            _supportParser.AddSocialNetworkToScientist(ListOfSocial, scientist.Name);
+                            /*_supportParser.AddWorkToScientist(scientist.Name, listOfWorkWithDegree.Item1);
+                            _supportParser.AddScietistSubdirAndAddDirectionToDb(subdirectionOfWork, direction, scientist.Name)*/;
+                            await _scientistRepository.UpdateAsync(scientist);
                         }
                     }
 
@@ -110,7 +106,7 @@ namespace Parser1.Servises
                 }
 
 
-                _supportParser.AddWorkToScientists("педагогічні науки");
+                //_supportParser.AddWorkToScientists("педагогічні науки");
             }
             catch (Exception)
             {
@@ -120,13 +116,19 @@ namespace Parser1.Servises
             }
 
             _driver.Quit();
+            #endregion
+
+            #region parse dimensions https://app.dimensions.ai/ ( Fields of Research | Concepts | Orcid social network)
+            #endregion
+
+            #region scopus 
         }
 
         /// <summary>
         /// Get and check current directions 
         /// </summary>
         /// <returns></returns>
-        public async Task<List<string>> GetDirection()
+        /*public async Task<List<string>> GetDirection()
         {
             _driver.Url = @"http://nbuviap.gov.ua/bpnu/index.php?page=search";
 
@@ -155,7 +157,7 @@ namespace Parser1.Servises
             }));
 
             return foundDirections;
-        }
+        }*/
 
         /// <summary>
         /// Check current count Scientists on DB and Site 
@@ -259,7 +261,5 @@ namespace Parser1.Servises
             await _scientistRepository.CreateAsync(scientistsToCreate);
             _driver.Quit();
         }
-
-
     }
 }

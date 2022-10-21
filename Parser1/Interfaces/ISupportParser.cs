@@ -1,4 +1,6 @@
-﻿namespace Parser1.Interfaces
+﻿using DAL.Models;
+
+namespace Parser1.Interfaces
 {
     public interface ISupportParser
     {
@@ -10,8 +12,8 @@
 
         public void AddScietistSubdirAndAddDirectionToDb(List<string> subDirection, string direction, string scientistName);
 
-        public void AddSocialNetworkToScientist(List<string> listOfSocial, string scientistName);
-        public List<string> GetSocialNetwork(string scientistName);
+        public void AddSocialNetworkToScientist(List<string> listOfSocial, Scientist scientist);
+        public List<ScientistSocialNetwork> GetSocialNetwork(string scientistName);
 
         public string GetSocialUrl(string socialElement);
     }

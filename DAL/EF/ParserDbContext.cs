@@ -5,15 +5,12 @@ namespace DAL.EF
 {
     public class ParserDbContext : DbContext
     {
-        public DbSet<Direction> Directions { get; set; } = null!;
         public DbSet<Scientist> Scientists { get; set; } = null!;
-
-        public DbSet<ScientistSubdirection> ScientistSubdirections { get; set; } = null!;
+        public DbSet<ScientistFieldOfResearch> ScientistFieldOfResearch { get; set; } = null!;
         public DbSet<ScientistWork> ScientistsWork { get; set; } = null!;
         public DbSet<Work> Works { get; set; } = null!;
-        public DbSet<Subdirection> Subdirections { get; set; } = null!;
-
-        public DbSet<SocialNetworkOfScientist> SocialNetworkOfScientists { get; set; } = null!;
+        public DbSet<FieldOfResearch> FieldOfResearch { get; set; } = null!;
+        public DbSet<ScientistSocialNetwork> SocialNetworkOfScientists { get; set; } = null!;
 
         public ParserDbContext()
         {
@@ -43,13 +40,9 @@ namespace DAL.EF
                 .WithMany(c => c.ScientistsWorks)
                 .HasForeignKey(bc => bc.WorkId);
 
-            modelBuilder.Entity<Direction>()
-                .HasMany(c => c.Subdirections)
-                .WithOne(e => e.Direction);
-
-            modelBuilder.Entity<SocialNetworkOfScientist>()
+            modelBuilder.Entity<ScientistSocialNetwork>()
                 .HasOne(s => s.Scientist)
-                .WithMany(g => g.NetworkOfScientists)
+                .WithMany(g => g.ScientistSocialNetworks)
                 .HasForeignKey(s => s.ScientistId);
 
             modelBuilder.Entity<Scientist>()
@@ -57,15 +50,25 @@ namespace DAL.EF
                 .WithMany(g => g.Scientists)
                 .HasForeignKey(s => s.OrganizationId);
 
-            modelBuilder.Entity<ScientistSubdirection>()
-                .HasOne(bc => bc.Scientist)
-                .WithMany(b => b.ScientistSubdirections)
-                .HasForeignKey(bc => bc.ScientistId);
+            modelBuilder.Entity<FieldOfResearch>()
+                .HasMany(s => s.ScientistsFieldsOfResearch)
+                .WithOne(g => g.FieldOfResearch)
+                .HasForeignKey(s => s.FieldOfResearchId);
 
-            modelBuilder.Entity<ScientistSubdirection>()
-                .HasOne(bc => bc.Subdirection)
-                .WithMany(c => c.ScientistSubdirections)
-                .HasForeignKey(bc => bc.SubdirectionId);
+            modelBuilder.Entity<FieldOfResearch>()
+                .HasOne(s => s.ParentFieldOfResearch)
+                .WithMany(g => g.ChildFieldsOfResearch)
+                .HasForeignKey(s => s.ParentFieldOfResearchId);
+
+            modelBuilder.Entity<ScientistFieldOfResearch>()
+                .HasOne(s => s.Scientist)
+                .WithMany(g => g.ScientistFieldsOfResearch)
+                .HasForeignKey(s => s.ScientistId);
+
+            modelBuilder.Entity<ScientistFieldOfResearch>()
+                .HasOne(s => s.FieldOfResearch)
+                .WithMany(g => g.ScientistsFieldsOfResearch)
+                .HasForeignKey(s => s.FieldOfResearchId);
         }
     }
 }

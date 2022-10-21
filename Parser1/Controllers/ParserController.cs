@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Parser1.EF;
 using Parser1.Interfaces;
 
 namespace Parser1.Controllers
@@ -8,14 +7,12 @@ namespace Parser1.Controllers
     [Route("[controller]")]
     public class ParserController : ControllerBase
     {
-        private readonly ApplicationContext _context;
         private readonly IMainParser _mainParser;
         private readonly ISupportParser _supportParser;
         private readonly IRatingServise _ratingServise;
 
-        public ParserController(ApplicationContext context, IMainParser mainParser, ISupportParser supportParser, IRatingServise ratingServise)
+        public ParserController(IMainParser mainParser, ISupportParser supportParser, IRatingServise ratingServise)
         {
-            _context = context;
             _mainParser = mainParser;
             _supportParser = supportParser;
             _ratingServise = ratingServise;
@@ -25,7 +22,7 @@ namespace Parser1.Controllers
         [HttpGet("Parser")]
         public async Task<IActionResult> StartMainParser()
         {
-            _mainParser.ParseGeneralInfo();
+            await _mainParser.StartParsing();
             return Ok();
         }
 

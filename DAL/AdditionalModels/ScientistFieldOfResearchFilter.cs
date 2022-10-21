@@ -1,8 +1,8 @@
 ﻿namespace DAL.AdditionalModels
 {
-    public class ScientistFilter
+    public class ScientistFieldOfResearchFilter
     {
-        public string? Name { get; set; }
+        public int? ScientistId { get; set; }
         public int? FieldOfResearchId { get; set; }
     }
 }

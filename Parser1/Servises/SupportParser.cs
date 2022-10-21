@@ -1,23 +1,26 @@
-﻿using OpenQA.Selenium;
+﻿using DAL.AdditionalModels;
+using DAL.Models;
+using DAL.Repositories;
+using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using Parser1.EF;
 using Parser1.Helpers;
 using Parser1.Interfaces;
-using Parser1.Models;
 
 namespace Parser1.Servises
 {
     public class SupportParser : ISupportParser
     {
         private readonly IWebDriver _driver;
-        private readonly ApplicationContext _context;
         private readonly IRatingServise _ratingServise;
+        private readonly IScientistRepository _scientistRepository;
+        private readonly IScientistSocialNetworkRepository _scientistSocialNetworkRepository;
 
-        public SupportParser(ApplicationContext context, IRatingServise ratingServise, IWebDriver driver)
+        public SupportParser(IRatingServise ratingServise, IWebDriver driver, IScientistRepository scientistRepository, IScientistSocialNetworkRepository scientistSocialNetworkRepository)
         {
-            _context = context;
             _ratingServise = ratingServise;
             _driver = driver;
+            _scientistRepository = scientistRepository;
+            _scientistSocialNetworkRepository = scientistSocialNetworkRepository;
         }
 
         public (List<string>, string degree) GetListOfWork(string name)
@@ -512,52 +515,39 @@ namespace Parser1.Servises
             _context.SaveChanges();
         }
 
-        public void AddSocialNetworkToScientist(List<string> listOfSocial, string scientistName)
+        public List<ScientistSocialNetwork> GetSocialNetwork(string scientistName)
         {
-            var scientist = _context.Scientists.FirstOrDefault(e => e.Name.Equals(scientistName));
-            foreach (var url in listOfSocial)
+            var networksData = new List<(string Xpath, SocialNetworkType NetworkType)>()
             {
-                if (url is not null)
-                {
-                    SocialNetworkOfScientist networkOfScientist = new SocialNetworkOfScientist()
-                    {
-                        Url = url,
-                        ScientistId = scientist.Id
-                    };
-                    scientist.NetworkOfScientists.Add(networkOfScientist);
-                    _context.SocialNetworkOfScientists.Add(networkOfScientist);
-                    _context.SaveChanges();
-                }
-            }
-        }
-        public List<string> GetSocialNetwork(string scientistName)
-        {
-            var netWorks = new List<string>()
-            {
-                $"//td[contains(.,\"{scientistName}\")]/../td/a[contains(@href,'google')]",
-                $"//td[contains(.,\"{scientistName}\")]/../td/a[contains(@href,'scopus')]",
-                $"//td[contains(.,\"{scientistName}\")]/../td/a[contains(@href,'wos')]"
+                (Xpath: $"//td[contains(.,\"{scientistName}\")]/../td/a[contains(@href,'google')]", NetworkType: SocialNetworkType.GoogleScholar),
+                (Xpath: $"//td[contains(.,\"{scientistName}\")]/../td/a[contains(@href,'scopus')]", NetworkType: SocialNetworkType.Scopus),
+                (Xpath: $"//td[contains(.,\"{scientistName}\")]/../td/a[contains(@href,'wos')]", NetworkType: SocialNetworkType.WOS)
             };
 
-            var result = new List<string>();
-            foreach (var netWork in netWorks)
+            var result = new List<ScientistSocialNetwork>();
+            foreach (var networkData in networksData)
             {
-                var netWorkUrl = GetSocialUrl(netWork);
+                var netWorkUrl = GetSocialUrl(networkData.Xpath);
                 if (!string.IsNullOrEmpty(netWorkUrl))
                 {
-                    result.Add(netWorkUrl);
+                    result.Add(new ScientistSocialNetwork() 
+                    {
+                        Url = netWorkUrl,
+                        Type = networkData.NetworkType,
+                        SocialNetworkScientistId = netWorkUrl.GetScientistSocialNetworkAccountId(networkData.NetworkType)
+                    });
                 }
 
             }
             return result;
         }
 
-        public string GetSocialUrl(string socialElement)
+        public string GetSocialUrl(string socialNetworkXPath)
         {
             string? socialUrl = null;
             try
             {
-                var isExistUrl = _driver.FindElement(By.XPath($"{socialElement}")).GetAttribute("href");
+                var isExistUrl = _driver.FindElement(By.XPath($"{socialNetworkXPath}")).GetAttribute("href");
                 if (!String.IsNullOrEmpty(isExistUrl))
                 {
                     socialUrl = isExistUrl;

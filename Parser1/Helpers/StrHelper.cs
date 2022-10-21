@@ -1,6 +1,8 @@
-﻿namespace Parser1.Helpers
+﻿using DAL.AdditionalModels;
+
+namespace Parser1.Helpers
 {
-    public class StrHelper
+    public static class StrHelper
     {
         public static string GetOnlyName(string name)
         {
@@ -79,6 +81,18 @@
 
 
 
+        }
+
+        public static string GetScientistSocialNetworkAccountId(this string socialNetworkUrl, SocialNetworkType socialNetworkType)
+        {
+            return socialNetworkType switch
+            {
+                SocialNetworkType.GoogleScholar => new Uri(socialNetworkUrl).Query.Split("&").FirstOrDefault(parameter => parameter.Split("=")[0].Equals("authorId")).Split("=")[1],
+                SocialNetworkType.Scopus => new Uri(socialNetworkUrl).Query.Split("&").FirstOrDefault(parameter => parameter.Split("=")[0].Equals("user")).Split("=")[1],
+                SocialNetworkType.WOS => new Uri(socialNetworkUrl).AbsolutePath.Split("/").Last(),
+                SocialNetworkType.ORCID => throw new Exception(),
+                _ => throw new Exception(),
+            };
         }
     }
 }

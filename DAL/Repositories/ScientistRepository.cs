@@ -32,9 +32,9 @@ namespace DAL.Repositories
 
         private IQueryable<Scientist> GetScientistsAsync(ScientistFilter? filter)
         {
-            return GetAll().Where(scientist => filter == null ||
+            return GetAll().Include(scientist => scientist.ScientistFieldsOfResearch).Where(scientist => filter == null ||
             (string.IsNullOrEmpty(filter.Name) || (filter.Name.Contains(scientist.Name) || scientist.Name.Contains(filter.Name))) &&
-            (!filter.DirectionId.HasValue || filter.DirectionId == scientist.DirectionId)
+            (!filter.FieldOfResearchId.HasValue || scientist.ScientistFieldsOfResearch.Any(scientistFieldsOfResearch => scientistFieldsOfResearch.FieldOfResearchId == filter.FieldOfResearchId))
             );
         }
     }
