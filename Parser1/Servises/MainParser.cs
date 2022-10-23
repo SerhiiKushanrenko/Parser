@@ -1,10 +1,9 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using DAL.AdditionalModels;
+using DAL.Models;
+using DAL.Repositories;
 using OpenQA.Selenium;
 using Parser1.Helpers;
 using Parser1.Interfaces;
-using DAL.Models;
-using DAL.Repositories;
-using DAL.AdditionalModels;
 
 namespace Parser1.Servises
 {
@@ -17,7 +16,7 @@ namespace Parser1.Servises
         private readonly IRatingServise _ratingServise;
 
         //bibliometrics - we are going to take scientist names + social networks
-        private const string URL = @"http://nbuviap.gov.ua/bpnu/index.php?page=search"; 
+        private const string URL = @"http://nbuviap.gov.ua/bpnu/index.php?page=search";
 
         public MainParser(
             ISupportParser supportParser,
@@ -29,7 +28,8 @@ namespace Parser1.Servises
             _supportParser = supportParser;
             _ratingServise = ratingServise;
             _driver = driver;
-            _fieldOfResearchRepository = fieldOfResearchRepository;            _scientistRepository = scientistRepository;
+            _fieldOfResearchRepository = fieldOfResearchRepository;
+            _scientistRepository = scientistRepository;
 
         }
 
@@ -47,7 +47,7 @@ namespace Parser1.Servises
             try
             {
                 _driver.FindElement(By.XPath("//input[@class='btn btn-primary mb-2']")).Click();
-                
+
                 await Task.Delay(4000);
 
                 while (true)
@@ -67,7 +67,7 @@ namespace Parser1.Servises
 
                     for (int i = 0; i < scientistsNamesElements.Count; i++)
                     {
-                        //var rating = _ratingServise.GerRatingGoogleScholar(scientistsNamesElements[i].Text);
+                        //var rating = _ratingServise.GetRatingForScientist(scientistsNamesElements[i].Text);
 
                         var listOfSocial = _supportParser.GetSocialNetwork(scientistsNamesElements[i].Text);
 
@@ -90,7 +90,8 @@ namespace Parser1.Servises
 
                             await _scientistRepository.CreateAsync(scientist);
                             /*_supportParser.AddWorkToScientist(scientist.Name, listOfWorkWithDegree.Item1);
-                            _supportParser.AddScietistSubdirAndAddDirectionToDb(subdirectionOfWork, direction, scientist.Name)*/;
+                            _supportParser.AddScietistSubdirAndAddDirectionToDb(subdirectionOfWork, direction, scientist.Name)*/
+                            ;
                             await _scientistRepository.UpdateAsync(scientist);
                         }
                     }
@@ -122,6 +123,7 @@ namespace Parser1.Servises
             #endregion
 
             #region scopus 
+            #endregion
         }
 
         /// <summary>
@@ -182,8 +184,8 @@ namespace Parser1.Servises
 
             try
             {
-                directionId = (await _directionRepository.GetAsync(direction))!.Id;
-                var scientistsCount = await _scientistRepository.GetScientistsCountAsync(new ScientistFilter { DirectionId = directionId });
+                directionId = (await _fieldOfResearchRepository.GetAsync(direction))!.Id;
+                var scientistsCount = await _scientistRepository.GetScientistsCountAsync(new ScientistFilter { FieldOfResearchId = directionId });
 
                 if (totalSumOnSite != scientistsCount)
                 {
@@ -216,7 +218,7 @@ namespace Parser1.Servises
 
             await Task.Delay(4000);
             var existingScientists = await _scientistRepository.GetScientistsListAsync();
-            var existingDirections = await _directionRepository.GetDirectionsAsync();
+            var existingDirections = await _fieldOfResearchRepository.GetFieldsOfResearchAsync();
             var scientistsToCreate = new List<Scientist>();
             while (true)
             {
@@ -228,15 +230,16 @@ namespace Parser1.Servises
                     .FindElements(By.XPath("/html/body/main/div[1]/table/tbody/tr/td[8]"));
 
                 await Task.Delay(500);
-                
-                var directionId = existingDirections.FirstOrDefault(existingDirection => existingDirection.Name.Equals(currentDirection.Text))?.Id;
+
+                var directionId = existingDirections.FirstOrDefault(existingDirection => existingDirection.Title.Equals(currentDirection.Text))?.Id;
                 if (directionId != null)
                 {
                     //TODO
                     // А что делать если ее в базе нет?))
                 }
 
-                scientistsNames.ForEach(scientistName => 
+                //forEach не подходит надо доставать еще список организаций и направлений по итерации
+                scientistsNames.ForEach(scientistName =>
                 {
                     if (!existingScientists.Any(existingScientist => existingScientist.Name.Equals(scientistName.Text)))
                     {
@@ -244,7 +247,7 @@ namespace Parser1.Servises
                         {
                             Name = scientistName.Text,
                             //Organization = organization.ElementAt(i).Text,
-                            DirectionId = directionId.Value,
+                            //DirectionId = directionId.Value,
                         });
                     }
                 });

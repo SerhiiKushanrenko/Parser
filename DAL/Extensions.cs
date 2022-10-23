@@ -19,9 +19,10 @@ namespace DAL
                     context.Database.Migrate();
                 }
             }
+
             services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
-            services.AddScoped(typeof(IDirectionRepository), typeof(DirectionRepository));
+            //services.AddScoped(typeof(IDirectionRepository), typeof(DirectionRepository));
         }
     }
 }

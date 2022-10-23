@@ -14,13 +14,26 @@ namespace Parser1.Servises
         private readonly IRatingServise _ratingServise;
         private readonly IScientistRepository _scientistRepository;
         private readonly IScientistSocialNetworkRepository _scientistSocialNetworkRepository;
+        private readonly IFieldOfResearchRepository _fieldOfResearchRepository;
+        private readonly IWorkRepository _workRepository;
+        private readonly IScientistWorkRepository _scientistWorkRepository;
 
-        public SupportParser(IRatingServise ratingServise, IWebDriver driver, IScientistRepository scientistRepository, IScientistSocialNetworkRepository scientistSocialNetworkRepository)
+        public SupportParser
+            (IRatingServise ratingServise,
+             IWebDriver driver,
+             IScientistRepository scientistRepository,
+             IScientistSocialNetworkRepository scientistSocialNetworkRepository,
+             IFieldOfResearchRepository fieldOfResearchRepository,
+             IWorkRepository workRepository,
+             IScientistWorkRepository scientist)
         {
             _ratingServise = ratingServise;
             _driver = driver;
             _scientistRepository = scientistRepository;
             _scientistSocialNetworkRepository = scientistSocialNetworkRepository;
+            _fieldOfResearchRepository = fieldOfResearchRepository;
+            _workRepository = workRepository;
+            _scientistWorkRepository = scientist;
         }
 
         public (List<string>, string degree) GetListOfWork(string name)
@@ -82,14 +95,14 @@ namespace Parser1.Servises
             {
                 foreach (var scientistWork in listOfWork)
                 {
-                    var scientistFromDb = _context.Scientists.First(e => e.Name.Equals(name));
+                    var scientistFromDb = _scientistRepository.GetAsync(name);
                     var workScientistFromDb =
-                        _context.Works.FirstOrDefault(e => e.Name == scientistWork);
+                        _fieldOfResearchRepository.GetAsync(scientistWork);
 
                     if (workScientistFromDb is not null)
                     {
-
-                        if (_context.ScientistsWork.Any(e =>
+                        // fix need bool 
+                        if (_scientistWorkRepository.Any(e =>
                                 e.ScientistId.Equals(scientistFromDb.Id) &
                                 e.WorkId.Equals(workScientistFromDb.Id)))
                         {
@@ -102,9 +115,8 @@ namespace Parser1.Servises
                                 ScientistId = scientistFromDb.Id,
                                 WorkId = workScientistFromDb.Id
                             };
-                            _context.ScientistsWork.Add(newScientistWork);
+                            _scientistWorkRepository.CreateAsync(newScientistWork);
 
-                            _context.SaveChanges();
                         }
                     }
                     else
@@ -114,20 +126,15 @@ namespace Parser1.Servises
                             Name = scientistWork,
                         };
 
-                        var work = _context.Works.Add(newWorkOfScientist);
-
-
-                        _context.SaveChanges();
+                        var work = _workRepository.CreateAsync(newWorkOfScientist);
 
                         ScientistWork newScientistWork = new()
                         {
                             ScientistId = scientistFromDb.Id,
-                            WorkId = work.Entity.Id
+                            WorkId = _workRepository.GetAsync(work.Id).Id
                         };
-                        _context.ScientistsWork.Add(newScientistWork);
+                        _scientistWorkRepository.CreateAsync(newScientistWork);
 
-
-                        _context.SaveChanges();
                     }
 
                 }
@@ -192,16 +199,16 @@ namespace Parser1.Servises
                                 .Select(x => x.Text)
                                 .ToList();
 
-                        var checkIsScientistExist = _context.Scientists.Any(e => e.Name.Equals(scientistName));
+                        var checkIsScientistExist = _scientistRepository.GetAsync(scientistName);
 
                         foreach (var scientistWork in listOfWork)
                         {
 
-                            if (checkIsScientistExist)
+                            if (checkIsScientistExist is not null)
                             {
-                                var scientistFromDb = _context.Scientists.First(e => e.Name.Equals(scientistName));
+                                var scientistFromDb = _scientistRepository.GetAsync(scientistName);
                                 var workScientistFromDb =
-                                    _context.Works.FirstOrDefault(e => e.Name == scientistWork);
+                                    _workRepository.GetAsync(scientistWork);
 
                                 if (workScientistFromDb is not null)
                                 {
@@ -219,9 +226,8 @@ namespace Parser1.Servises
                                             ScientistId = scientistFromDb.Id,
                                             WorkId = workScientistFromDb.Id
                                         };
-                                        _context.ScientistsWork.Add(newScientistWork);
+                                        _scientistWorkRepository.CreateAsync(newScientistWork);
 
-                                        _context.SaveChanges();
                                     }
                                 }
                                 else
@@ -231,20 +237,15 @@ namespace Parser1.Servises
                                         Name = scientistWork,
                                     };
 
-                                    var work = _context.Works.Add(newWorkOfScientist);
+                                    var work = _workRepository.CreateAsync(newWorkOfScientist);
 
-
-                                    _context.SaveChanges();
 
                                     ScientistWork newScientistWork = new()
                                     {
                                         ScientistId = scientistFromDb.Id,
-                                        WorkId = work.Entity.Id
+                                        WorkId = _workRepository.GetAsync(work.Id).Id
                                     };
-                                    _context.ScientistsWork.Add(newScientistWork);
-
-
-                                    _context.SaveChanges();
+                                    _scientistWorkRepository.CreateAsync(newScientistWork);
                                 }
                             }
                         }
@@ -395,11 +396,11 @@ namespace Parser1.Servises
                 var currentNameOfWork = StrHelper.GetOnlyNameOfWork(scientistWork);
 
                 //var checkIsScientistExist = _context.Scientists.Any(e => e.Name.Equals(scientistName));
-                var scientistFromDb = _context.Scientists.FirstOrDefault(e => e.Name.Equals(scientistName));
+                var scientistFromDb = _scientistRepository.GetAsync(scientistName);
                 if (scientistFromDb is not null)
                 {
                     var workScientistFromDb =
-                        _context.Works.FirstOrDefault(e => e.Name == currentNameOfWork);
+                        _workRepository.GetAsync(currentNameOfWork);
 
                     if (workScientistFromDb is not null)
                     {
@@ -419,9 +420,7 @@ namespace Parser1.Servises
                                 ScientistId = scientistFromDb.Id,
                                 WorkId = workScientistFromDb.Id
                             };
-                            _context.ScientistsWork.Add(newScientistWork);
-
-                            _context.SaveChanges();
+                            _scientistWorkRepository.CreateAsync(newScientistWork);
                         }
                     }
                     else
@@ -432,30 +431,26 @@ namespace Parser1.Servises
                             Year = yearOfWork
                         };
 
-                        var work = _context.Works.Add(newWorkOfScientist);
-
-                        _context.SaveChanges();
+                        var work = _workRepository.CreateAsync(newWorkOfScientist);
 
                         ScientistWork newScientistWork = new()
                         {
                             ScientistId = scientistFromDb.Id,
-                            WorkId = work.Entity.Id
+                            WorkId = _workRepository.GetAsync(work.Id).Id
                         };
-                        _context.ScientistsWork.Add(newScientistWork);
-
-                        _context.SaveChanges();
+                        _scientistWorkRepository.CreateAsync(newScientistWork);
                     }
                 }
                 else
                 {
-                    var directionId = _context.Directions.FirstOrDefault(e => e.Name.Equals(directionForScientist))!.Id;
+                    var directionId = _fieldOfResearchRepository.GetAsync(directionForScientist).Id;
                     var scientist = new Scientist()
                     {
                         Name = scientistName,
                         // Organization = organization,
-                        DirectionId = directionId,
+                        // DirectionId = directionId,
                     };
-                    _context.Scientists.Add(scientist);
+                    _scientistRepository.CreateAsync(scientist);
 
 
                     Work newWorkOfScientist = new()
@@ -464,56 +459,54 @@ namespace Parser1.Servises
                         Year = yearOfWork
                     };
 
-                    var work = _context.Works.Add(newWorkOfScientist);
+                    var work = _workRepository.CreateAsync(newWorkOfScientist);
 
                     ScientistWork newScientistWork = new()
                     {
                         ScientistId = scientist.Id,
-                        WorkId = work.Entity.Id
+                        WorkId = _workRepository.GetAsync(work.Id).Id
                     };
-                    _context.ScientistsWork.Add(newScientistWork);
-
-                    _context.SaveChanges();
+                    _scientistWorkRepository.CreateAsync(newScientistWork);
                 }
             }
         }
 
 
-        public void AddScietistSubdirAndAddDirectionToDb(List<string> subDirection, string direction, string scientistName)
-        {
-            var directionId = _context.Directions.FirstOrDefault(e => e.Name.Equals(direction))!.Id;
+        //public void AddScietistSubdirAndAddDirectionToDb(List<string> subDirection, string direction, string scientistName)
+        //{
+        //    var directionId = _context.Directions.FirstOrDefault(e => e.Name.Equals(direction))!.Id;
 
-            foreach (var sub in subDirection)
-            {
-                if (!_context.Subdirections.Any(e => e.Title == sub))
-                {
-                    Subdirection newSub = new Subdirection()
-                    {
-                        Title = sub,
-                        DirectionId = directionId
+        //    foreach (var sub in subDirection)
+        //    {
+        //        if (!_context.Subdirections.Any(e => e.Title == sub))
+        //        {
+        //            Subdirection newSub = new Subdirection()
+        //            {
+        //                Title = sub,
+        //                DirectionId = directionId
 
-                    };
-                    _context.Subdirections.Add(newSub);
-                    _context.SaveChanges();
+        //            };
+        //            _context.Subdirections.Add(newSub);
+        //            _context.SaveChanges();
 
-                    AddScientistSubdirection(scientistName, newSub.Title);
-                }
-            }
-        }
+        //            AddScientistSubdirection(scientistName, newSub.Title);
+        //        }
+        //    }
+        //}
 
-        public void AddScientistSubdirection(string scientistName, string subdirectionTitle)
-        {
-            var scientistId = _context.Scientists.FirstOrDefault(e => e.Name.Equals(scientistName))!.Id;
-            var subDirectionId = _context.Subdirections.FirstOrDefault(e => e.Title == subdirectionTitle)!.Id;
+        //public void AddScientistSubdirection(string scientistName, string subdirectionTitle)
+        //{
+        //    var scientistId = _context.Scientists.FirstOrDefault(e => e.Name.Equals(scientistName))!.Id;
+        //    var subDirectionId = _context.Subdirections.FirstOrDefault(e => e.Title == subdirectionTitle)!.Id;
 
-            ScientistSubdirection scientistSubdirection = new ScientistSubdirection()
-            {
-                ScientistId = scientistId,
-                SubdirectionId = subDirectionId
-            };
-            _context.ScientistSubdirections.Add(scientistSubdirection);
-            _context.SaveChanges();
-        }
+        //    ScientistSubdirection scientistSubdirection = new ScientistSubdirection()
+        //    {
+        //        ScientistId = scientistId,
+        //        SubdirectionId = subDirectionId
+        //    };
+        //    _context.ScientistSubdirections.Add(scientistSubdirection);
+        //    _context.SaveChanges();
+        //}
 
         public List<ScientistSocialNetwork> GetSocialNetwork(string scientistName)
         {
@@ -530,7 +523,7 @@ namespace Parser1.Servises
                 var netWorkUrl = GetSocialUrl(networkData.Xpath);
                 if (!string.IsNullOrEmpty(netWorkUrl))
                 {
-                    result.Add(new ScientistSocialNetwork() 
+                    result.Add(new ScientistSocialNetwork()
                     {
                         Url = netWorkUrl,
                         Type = networkData.NetworkType,
@@ -561,6 +554,11 @@ namespace Parser1.Servises
             }
 
             return socialUrl;
+        }
+
+        public void AddScietistSubdirAndAddDirectionToDb(List<string> subDirection, string direction, string scientistName)
+        {
+            throw new NotImplementedException();
         }
     }
 }

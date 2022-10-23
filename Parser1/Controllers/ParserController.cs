@@ -30,13 +30,13 @@ namespace Parser1.Controllers
         /// Get and Check all Direction
         /// </summary>
         /// <returns></returns>
-        [HttpGet("GetDirection")]
-        public IActionResult GetAllDirection()
-        {
-            var directions = _mainParser.GetDirection();
+        //[HttpGet("GetDirection")]
+        //public IActionResult GetAllDirection()
+        //{
+        //    var directions = _mainParser.GetDirection();
 
-            return Ok(directions);
-        }
+        //    return Ok(directions);
+        //}
 
         /// <summary>
         /// Search scientist to work

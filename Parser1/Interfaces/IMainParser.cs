@@ -4,7 +4,7 @@
     {
         public Task StartParsing();
 
-        public Task<List<string>> GetDirection();
+        // public Task<List<string>> GetDirection();
 
         public Task CheckOnEquals(string direction);
 
