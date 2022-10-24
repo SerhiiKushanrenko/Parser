@@ -9,7 +9,7 @@ using DAL.EF;
 
 #nullable disable
 
-namespace Parser.Migrations
+namespace DAL.Migrations
 {
     [DbContext(typeof(ParserDbContext))]
     [Migration("20221021074847_addScientistNetwork")]

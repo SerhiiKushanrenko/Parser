@@ -9,10 +9,18 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddDataLayer(builder.Configuration);
-builder.Services.AddTransient<IMainParser, MainParser>();
-builder.Services.AddTransient<ISupportParser, SupportParser>();
-builder.Services.AddTransient<IRatingServise, RatingServise>();
+builder.Services.AddScoped<IMainParser, MainParser>();
+builder.Services.AddScoped<ISupportParser, SupportParser>();
+builder.Services.AddScoped<IRatingServise, RatingServise>();
 builder.Services.AddScoped<IWebDriver, ChromeDriver>();
+
+//builder.Services.AddScoped(typeof(IMainParser), typeof(MainParser));
+
+//builder.Services.AddScoped(typeof(ISupportParser), typeof(SupportParser));
+
+//builder.Services.AddScoped(typeof(IRatingServise), typeof(RatingServise));
+
+//builder.Services.AddScoped(typeof(IWebDriver), typeof(ChromeDriver));
 
 builder.Services.AddControllers();
 

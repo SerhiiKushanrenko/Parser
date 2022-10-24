@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace Parser.Migrations
+namespace DAL.Migrations
 {
     public partial class addDegree : Migration
     {

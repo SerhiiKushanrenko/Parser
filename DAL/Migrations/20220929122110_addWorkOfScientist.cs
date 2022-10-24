@@ -3,7 +3,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
-namespace Parser.Migrations
+namespace DAL.Migrations
 {
     public partial class addWorkOfScientist : Migration
     {

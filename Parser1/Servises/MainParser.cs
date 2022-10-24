@@ -56,8 +56,8 @@ namespace Parser.Servises
 
                     var scientistsNamesElements = _driver.FindElements(By.XPath("/html/body/main/div[1]/table/tbody/tr/td[3]"));
 
-                    /*var organizationsElements = _driver
-                        .FindElements(By.XPath("/html/body/main/div[1]/table/tbody/tr/td[8]"));*/
+                    var organizationsElements = _driver
+                        .FindElements(By.XPath("/html/body/main/div[1]/table/tbody/tr/td[8]"));
 
                     //var dirtySubdirectionOfWork = _driver.FindElements(By.XPath($"//table/tbody/tr/td[contains(.,'{direction}')]")).Select(e => e.Text).ToList();
 
@@ -79,7 +79,8 @@ namespace Parser.Servises
                         {
                             Name = scientistsNamesElements.ElementAt(i).Text,
                             //Degree = degree,
-                            ScientistSocialNetworks = listOfSocial
+                            ScientistSocialNetworks = listOfSocial,
+
 
 
                         };
