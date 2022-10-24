@@ -101,23 +101,30 @@ namespace Parser1.Servises
 
                     if (workScientistFromDb is not null)
                     {
-                        // fix need bool 
-                        if (_scientistWorkRepository.Any(e =>
-                                e.ScientistId.Equals(scientistFromDb.Id) &
-                                e.WorkId.Equals(workScientistFromDb.Id)))
+                        if (_scientistWorkRepository.CheckScientistWorkAsync(new ScientistWorkFilter()
                         {
-                            continue;
-                        }
-                        else
-                        {
-                            ScientistWork newScientistWork = new()
+                            ScientistId = scientistFromDb.Id,
+                            WorkId = workScientistFromDb.Id
+                        }))
+                            // fix need bool 
+                            if (_scientistWorkRepository.CheckScientistWorkAsync(new ScientistWorkFilter()
                             {
                                 ScientistId = scientistFromDb.Id,
                                 WorkId = workScientistFromDb.Id
-                            };
-                            _scientistWorkRepository.CreateAsync(newScientistWork);
+                            }))
+                            {
+                                continue;
+                            }
+                            else
+                            {
+                                ScientistWork newScientistWork = new()
+                                {
+                                    ScientistId = scientistFromDb.Id,
+                                    WorkId = workScientistFromDb.Id
+                                };
+                                _scientistWorkRepository.CreateAsync(newScientistWork);
 
-                        }
+                            }
                     }
                     else
                     {
@@ -213,9 +220,11 @@ namespace Parser1.Servises
                                 if (workScientistFromDb is not null)
                                 {
 
-                                    if (_context.ScientistsWork.Any(e =>
-                                            e.ScientistId.Equals(scientistFromDb.Id) &
-                                            e.WorkId.Equals(workScientistFromDb.Id)))
+                                    if (_scientistWorkRepository.CheckScientistWorkAsync(new ScientistWorkFilter()
+                                    {
+                                        ScientistId = scientistFromDb.Id,
+                                        WorkId = workScientistFromDb.Id
+                                    }))
                                     {
                                         continue;
                                     }
@@ -404,12 +413,12 @@ namespace Parser1.Servises
 
                     if (workScientistFromDb is not null)
                     {
-                        //связан ли ученій которій есть в базе с работой которая тоже есть в базе 
-                        //var test = scientistFromDb.ScientistsWorks.Any(e =>
-                        //    e.WorkOfScientistId == workScientistFromDb.Id);
-                        if (_context.ScientistsWork.Any(e =>
-                                e.ScientistId.Equals(scientistFromDb.Id) &&
-                                e.WorkId.Equals(workScientistFromDb.Id)))
+
+                        if (_scientistWorkRepository.CheckScientistWorkAsync(new ScientistWorkFilter()
+                        {
+                            ScientistId = scientistFromDb.Id,
+                            WorkId = workScientistFromDb.Id
+                        }))
                         {
                             continue;
                         }

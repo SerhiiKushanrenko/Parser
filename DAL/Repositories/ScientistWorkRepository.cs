@@ -30,5 +30,15 @@ namespace DAL.Repositories
             //(!filter.FieldOfResearchId.HasValue || (filter.FieldOfResearchId == scientistFieldOfResearch.FieldOfResearchId))
             //).ToListAsync();
         }
+
+        public bool CheckScientistWorkAsync(ScientistWorkFilter? filter = null)
+        {
+            ////_context.ScientistsWork.Any(e =>
+            //e.ScientistId.Equals(scientistFromDb.Id) &
+            //    e.WorkId.Equals(workScientistFromDb.Id)))
+
+            return GetAll().Any(e => e.ScientistId.Equals(filter.ScientistId) & e.WorkId.Equals(filter.WorkId));
+
+        }
     }
 }

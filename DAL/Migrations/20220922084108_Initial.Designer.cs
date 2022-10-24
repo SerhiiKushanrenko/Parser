@@ -11,7 +11,9 @@ using Parser1.EF;
 
 namespace Parser1.Migrations
 {
-    [DbContext(typeof(ApplicationContext))]
+        
+
+    [DbContext(typeof(ParserDbContext))]
     [Migration("20220922084108_Initial")]
     partial class Initial
     {
