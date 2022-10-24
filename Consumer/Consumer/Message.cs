@@ -1,4 +1,4 @@
-﻿namespace Parser1.Publisher
+﻿namespace Parser.Publisher
 {
     public class Message
     {

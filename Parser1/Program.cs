@@ -2,8 +2,8 @@
 using DAL;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using Parser1.Interfaces;
-using Parser1.Servises;
+using Parser.Interfaces;
+using Parser.Servises;
 
 var builder = WebApplication.CreateBuilder(args);
 

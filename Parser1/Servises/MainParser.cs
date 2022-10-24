@@ -2,10 +2,10 @@
 using DAL.Models;
 using DAL.Repositories;
 using OpenQA.Selenium;
-using Parser1.Helpers;
-using Parser1.Interfaces;
+using Parser.Helpers;
+using Parser.Interfaces;
 
-namespace Parser1.Servises
+namespace Parser.Servises
 {
     public class MainParser : IMainParser
     {

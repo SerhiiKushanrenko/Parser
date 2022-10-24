@@ -4,13 +4,13 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using Parser1.EF;
+using DAL.EF;
 
 #nullable disable
 
-namespace Parser1.Migrations
+namespace Parser.Migrations
 {
-    [DbContext(typeof(ApplicationContext))]
+    [DbContext(typeof(ParserDbContext))]
     [Migration("20221013084646_changescientistmodal")]
     partial class changescientistmodal
     {

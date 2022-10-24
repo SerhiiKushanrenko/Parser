@@ -1,4 +1,4 @@
-﻿using Parser1.Publisher;
+﻿using Parser.Publisher;
 using SendGrid;
 using SendGrid.Helpers.Mail;
 

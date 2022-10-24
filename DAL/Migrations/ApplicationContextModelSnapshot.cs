@@ -5,7 +5,7 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 
 #nullable disable
 
-namespace Parser1.Migrations
+namespace Parser.Migrations
 {
     [DbContext(typeof(ParserDbContext))]
     partial class ApplicationContextModelSnapshot : ModelSnapshot

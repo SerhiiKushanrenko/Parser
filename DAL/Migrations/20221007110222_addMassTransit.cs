@@ -2,7 +2,7 @@
 
 #nullable disable
 
-namespace Parser1.Migrations
+namespace Parser.Migrations
 {
     public partial class addMassTransit : Migration
     {

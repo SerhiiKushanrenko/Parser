@@ -1,7 +1,7 @@
-﻿using Parser1.Publisher;
+﻿using Parser.Publisher;
 using Quartz;
 
-namespace Parser1.Extensions
+namespace Parser.Extensions
 {
     public static class ExtensionsClass
     {

@@ -1,6 +1,6 @@
 ﻿using Consumer.TransactionalEmail;
 using MassTransit;
-using Parser1.Publisher;
+using Parser.Publisher;
 
 namespace Consumer.Consumer
 {

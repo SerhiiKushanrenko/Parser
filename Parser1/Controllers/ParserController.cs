@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Parser1.Interfaces;
+using Parser.Interfaces;
 
-namespace Parser1.Controllers
+namespace Parser.Controllers
 {
     [ApiController]
     [Route("[controller]")]

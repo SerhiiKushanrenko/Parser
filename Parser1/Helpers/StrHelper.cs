@@ -1,6 +1,6 @@
 ﻿using DAL.AdditionalModels;
 
-namespace Parser1.Helpers
+namespace Parser.Helpers
 {
     public static class StrHelper
     {

@@ -1,6 +1,6 @@
 ﻿using DAL.Models;
 
-namespace Parser1.Interfaces
+namespace Parser.Interfaces
 {
     public interface ISupportParser
     {

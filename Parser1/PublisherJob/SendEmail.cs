@@ -1,7 +1,7 @@
 ﻿using MassTransit;
 using Quartz;
 
-namespace Parser1.Publisher
+namespace Parser.Publisher
 {
     public class SendEmail : IJob
     {

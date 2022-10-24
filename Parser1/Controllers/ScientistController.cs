@@ -1,19 +1,19 @@
+using DAL.EF;
+using DAL.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using Parser1.EF;
-using Parser1.Interfaces;
-using Parser1.Models;
+using Parser.Interfaces;
 
-namespace Parser1.Controllers
+namespace Parser.Controllers
 {
     [ApiController]
     [Route("[controller]")]
     public class ScientistController : ControllerBase
     {
-        private readonly ApplicationContext _context;
+        private readonly ParserDbContext _context;
         private readonly IMainParser _mainParser;
         private readonly ISupportParser _supportParser;
-        public ScientistController(ApplicationContext context, IMainParser mainParser, ISupportParser supportParser)
+        public ScientistController(ParserDbContext context, IMainParser mainParser, ISupportParser supportParser)
         {
             _context = context;
             _mainParser = mainParser;
@@ -81,23 +81,23 @@ namespace Parser1.Controllers
             }
         }
 
-        [HttpGet("GetAllFromDirection")]
-        public async Task<IActionResult> GetAllFromDirection(string direction)
-        {
-            // проверка на обновление бд на сайте
-            // mainParser.CheckOnEquals(direction);
-            try
-            {
-                var directionId = _context.Directions.FirstOrDefault(e => e.Name.Equals(direction))!.Id;
-                var scientists = await _context.Scientists.Where(e => e.DirectionId == directionId).Take(30).ToListAsync();
-                return Ok(scientists);
-            }
-            catch (Exception e)
-            {
-                var a = $"{e.Message} такого направления нет ";
-                return Ok(a);
-            }
-        }
+        //[HttpGet("GetAllFromDirection")]
+        //public async Task<IActionResult> GetAllFromDirection(string direction)
+        //{
+        //    // проверка на обновление бд на сайте
+        //    // mainParser.CheckOnEquals(direction);
+        //    try
+        //    {
+        //        var directionId = _context.Directions.FirstOrDefault(e => e.Name.Equals(direction))!.Id;
+        //        var scientists = await _context.Scientists.Where(e => e.DirectionId == directionId).Take(30).ToListAsync();
+        //        return Ok(scientists);
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        var a = $"{e.Message} такого направления нет ";
+        //        return Ok(a);
+        //    }
+        //}
 
         /// <summary>
         /// Get Scientists for Organization
