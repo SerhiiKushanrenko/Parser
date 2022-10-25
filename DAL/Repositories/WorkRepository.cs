@@ -1,6 +1,6 @@
-﻿using DAL.AdditionalModels;
-using DAL.EF;
+﻿using DAL.EF;
 using DAL.Models;
+using DAL.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace DAL.Repositories
@@ -25,13 +25,13 @@ namespace DAL.Repositories
             return await GetAll().FirstOrDefaultAsync(direction => direction.Name.Equals(name));
         }
 
-        public async Task<List<Work>> GetFieldsOfResearchAsync(FieldOfResearchFilter? filter = null)
-        {
-            return new List<Work>();
+        //public async Task<List<Work>> GetFieldsOfResearchAsync(FieldOfResearchFilter? filter = null)
+        //{
+        //    return new List<Work>();
 
-            //return await GetAll().Where(direction => filter == null ||
-            //(string.IsNullOrEmpty(filter.Title) || (filter.Title.Contains(direction.Title) || direction.Title.Contains(filter.Title)))
-            //).ToListAsync();
-        }
+        //    //return await GetAll().Where(direction => filter == null ||
+        //    //(string.IsNullOrEmpty(filter.Title) || (filter.Title.Contains(direction.Title) || direction.Title.Contains(filter.Title)))
+        //    //).ToListAsync();
+        //}
     }
 }

@@ -1,5 +1,6 @@
 ﻿using DAL.EF;
 using DAL.Repositories;
+using DAL.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -34,22 +35,8 @@ namespace DAL
 
             services.AddScoped(typeof(IWorkRepository), typeof(WorkRepository));
 
+            services.AddScoped(typeof(IOrganizationRepository), typeof(OrganizationRepository));
 
-            //services.AddScoped<IRepository<Scientist>, ScientistRepository>();
-            //services.AddScoped<IRepository<FieldOfResearch>, FieldOfResearchRepository>();
-            //services.AddScoped<IRepository<ScientistFieldOfResearch>, ScientistFieldOfResearchRepository>();
-            //services.AddScoped<IRepository<ScientistSocialNetwork>, ScientistSocialNetworkRepository>();
-            //services.AddScoped<IRepository<ScientistWork>, ScientistWorkRepository>();
-            //services.AddScoped<IRepository<Work>, WorkRepository>();
-
-            //services.AddScoped<IFieldOfResearchRepository, FieldOfResearchRepository>();
-            //services.AddScoped<IScientistFieldOfResearchRepository, ScientistFieldOfResearchRepository>();
-            //services.AddScoped<IScientistRepository, ScientistRepository>();
-            //services.AddScoped<IScientistSocialNetworkRepository, ScientistSocialNetworkRepository>();
-            //services.AddScoped<IScientistWorkRepository, ScientistWorkRepository>();
-            //services.AddScoped<IWorkRepository, WorkRepository>();
-
-            //services.AddScoped(typeof(IDirectionRepository), typeof(DirectionRepository));
         }
     }
 }

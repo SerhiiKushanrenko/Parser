@@ -1,5 +1,6 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Parser.Interfaces;
+﻿using BLL.Interfaces;
+using Microsoft.AspNetCore.Mvc;
+
 
 namespace Parser.Controllers
 {

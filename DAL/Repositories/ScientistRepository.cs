@@ -1,6 +1,7 @@
 ﻿using DAL.AdditionalModels;
 using DAL.EF;
 using DAL.Models;
+using DAL.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace DAL.Repositories

@@ -1,6 +1,7 @@
 ﻿using DAL.AdditionalModels;
 using DAL.EF;
 using DAL.Models;
+using DAL.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 namespace DAL.Repositories
@@ -27,7 +28,7 @@ namespace DAL.Repositories
 
         public async Task<List<FieldOfResearch>> GetFieldsOfResearchAsync(FieldOfResearchFilter? filter = null)
         {
-            return await GetAll().Where(direction => filter == null || 
+            return await GetAll().Where(direction => filter == null ||
             (string.IsNullOrEmpty(filter.Title) || (filter.Title.Contains(direction.Title) || direction.Title.Contains(filter.Title)))
             ).ToListAsync();
         }

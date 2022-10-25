@@ -1,8 +1,7 @@
-using DAL.EF;
+using BLL.Interfaces;
 using DAL.Models;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Parser.Interfaces;
+
 
 namespace Parser.Controllers
 {
@@ -10,12 +9,12 @@ namespace Parser.Controllers
     [Route("[controller]")]
     public class ScientistController : ControllerBase
     {
-        private readonly ParserDbContext _context;
+
         private readonly IMainParser _mainParser;
         private readonly ISupportParser _supportParser;
-        public ScientistController(ParserDbContext context, IMainParser mainParser, ISupportParser supportParser)
+        public ScientistController(IMainParser mainParser, ISupportParser supportParser)
         {
-            _context = context;
+
             _mainParser = mainParser;
             _supportParser = supportParser;
         }
@@ -28,17 +27,17 @@ namespace Parser.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(int id)
         {
-            var user = await _context.Scientists.FindAsync(id);
+            //var user = await _context.Scientists.FindAsync(id);
 
-            if (user is null)
-            {
-                return Ok($"Юзера с ID{id} нет в БД");
+            //if (user is null)
+            //{
+            //    return Ok($"Юзера с ID{id} нет в БД");
 
-                //_mainParser.ParseGeneralInfo();
-                //Thread.Sleep(2000);
-                //return Ok();
-            }
-            return Ok(user);
+            //    //_mainParser.ParseGeneralInfo();
+            //    //Thread.Sleep(2000);
+            //    //return Ok();
+            //}
+            return Ok();
         }
 
         /// <summary>
@@ -48,8 +47,9 @@ namespace Parser.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Scientist>>> GetAll()
         {
-            var scientists = await _context.Scientists.Take(500).AsNoTracking().ToListAsync();
-            return Ok(scientists);
+            //var scientists = await _context.Scientists.Take(500).AsNoTracking().ToListAsync();
+            //return Ok(scientists);
+            return Ok();
         }
 
         /// <summary>
@@ -61,24 +61,26 @@ namespace Parser.Controllers
         [HttpGet("GetFromOrder")]
         public IActionResult GetFromOrder(int haveToGet, int haveToSkip)
         {
-            var result = _context.Scientists.Skip(haveToSkip).Take(haveToGet).ToList();
-            return result.Any() ? Ok(result) : Ok("Стільки вчених немає");
+            //var result = _context.Scientists.Skip(haveToSkip).Take(haveToGet).ToList();
+            //return result.Any() ? Ok(result) : Ok("Стільки вчених немає");
+            return Ok();
         }
 
         [HttpGet("GetScientistFromWork")]
         public IActionResult GetScientistFromWork(string generalWork)
         {
-            try
-            {
-                var workOfScientistId = _context.Works.FirstOrDefault(e => e.Name.Equals(generalWork))!.Id;
-                var scientists = _context.ScientistsWork.Where(e => e.WorkId == workOfScientistId).Select(q => q.Scientist).ToList();
-                return Ok(scientists);
-            }
-            catch (System.NullReferenceException e)
-            {
-                var a = $"{e.Message} такой работы нет ";
-                return Ok(a);
-            }
+            return Ok();
+            //try
+            //{
+            //    var workOfScientistId = _context.Works.FirstOrDefault(e => e.Name.Equals(generalWork))!.Id;
+            //    var scientists = _context.ScientistsWork.Where(e => e.WorkId == workOfScientistId).Select(q => q.Scientist).ToList();
+            //    return Ok(scientists);
+            //}
+            //catch (System.NullReferenceException e)
+            //{
+            //    var a = $"{e.Message} такой работы нет ";
+            //    return Ok(a);
+            //}
         }
 
         //[HttpGet("GetAllFromDirection")]
