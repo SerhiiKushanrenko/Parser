@@ -19,10 +19,10 @@ namespace BLL
         {
             services.AddDataLayer(configuration);
 
-            services.AddTransient<IMainParser, MainParser>();
-            services.AddTransient<ISupportParser, SupportParser>();
-            services.AddTransient<IRatingService, RatingService>();
-            services.AddTransient<ISocialNetworkService, SocialNetworkService>();
+            services.AddScoped<IMainParser, MainParser>();
+            services.AddScoped<ISupportParser, SupportParser>();
+            services.AddScoped<IRatingService, RatingService>();
+            services.AddScoped<ISocialNetworkService, SocialNetworkService>();
             services.AddScoped<IWebDriver, ChromeDriver>();
         }
 
