@@ -7,7 +7,7 @@ using OpenQA.Selenium.Chrome;
 
 namespace Parser.Servises
 {
-    public class RatingServise : IRatingServise
+    public class RatingService : IRatingService
     {
         private readonly IWebDriver _driver;
 
@@ -17,7 +17,7 @@ namespace Parser.Servises
         private readonly IWorkRepository _workRepository;
         private readonly IScientistWorkRepository _scientistWorkRepository;
 
-        public RatingServise
+        public RatingService
         (
          IWebDriver driver,
          IScientistRepository scientistRepository,

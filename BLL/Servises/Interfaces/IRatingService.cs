@@ -1,6 +1,6 @@
 ﻿namespace BLL.Interfaces
 {
-    public interface IRatingServise
+    public interface IRatingService
     {
         //  public void GetRatingForScientists(string direction);
 

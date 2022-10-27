@@ -6,6 +6,16 @@ namespace BLL.Helpers
 {
     public static class StrHelper
     {
+        public static string GetScientistName(string name)
+        {
+            if (name.Contains('('))
+            {
+                var result = name.Split('(');
+                return result[0];
+            }
+
+            return name;
+        }
         public static string GetOnlyName(string name)
         {
             return name.Contains('(')

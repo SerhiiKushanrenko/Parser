@@ -6,13 +6,12 @@ using DAL.Repositories.Interfaces;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 
-
-namespace Parser.Servises
+namespace BLL.Parsers
 {
     public class SupportParser : ISupportParser
     {
         private readonly IWebDriver _driver;
-        private readonly IRatingServise _ratingServise;
+        private readonly IRatingService ratingService;
         private readonly IScientistRepository _scientistRepository;
         private readonly IScientistSocialNetworkRepository _scientistSocialNetworkRepository;
         private readonly IFieldOfResearchRepository _fieldOfResearchRepository;
@@ -24,7 +23,7 @@ namespace Parser.Servises
 
 
         public SupportParser
-            (IRatingServise ratingServise,
+            (IRatingService ratingService,
              IWebDriver driver,
              IScientistRepository scientistRepository,
              IScientistSocialNetworkRepository scientistSocialNetworkRepository,
@@ -32,7 +31,7 @@ namespace Parser.Servises
              IWorkRepository workRepository,
              IScientistWorkRepository scientist)
         {
-            _ratingServise = ratingServise;
+            this.ratingService = ratingService;
             _driver = driver;
             _scientistRepository = scientistRepository;
             _scientistSocialNetworkRepository = scientistSocialNetworkRepository;
@@ -276,7 +275,7 @@ namespace Parser.Servises
                                 $"/html/body/div[1]/center/table[2]/tbody/tr[1]/td[2]/font/table/tbody/tr/td[{counterForPaggination}]"))
                             .Click();
                     }
-                    catch (OpenQA.Selenium.NoSuchElementException e)
+                    catch (NoSuchElementException e)
                     {
                         break;
                     }
@@ -333,7 +332,7 @@ namespace Parser.Servises
                         try
                         {
 
-                            _ratingServise.GetRatingForScientist(name);
+                            ratingService.GetRatingForScientist(name);
                         }
                         catch (Exception e)
                         {
@@ -377,7 +376,7 @@ namespace Parser.Servises
                                 $"/html/body/div[1]/center/table[2]/tbody/tr[1]/td[2]/font/table/tbody/tr/td[{++counterForPaggination}]"))
                             .Click();
                     }
-                    catch (OpenQA.Selenium.NoSuchElementException e)
+                    catch (NoSuchElementException e)
                     {
                         break;
                     }
@@ -536,11 +535,12 @@ namespace Parser.Servises
                 var netWorkUrl = GetSocialUrl(networkData.Xpath);
                 if (networkData.NetworkType == SocialNetworkType.GoogleScholar)
                 {
-                    rating = _ratingServise.GetRatingGoogleScholar(netWorkUrl);
+                    rating = ratingService.GetRatingGoogleScholar(netWorkUrl);
                 }
 
                 if (!string.IsNullOrEmpty(netWorkUrl))
                 {
+                    //id scientist
                     result.Add(new ScientistSocialNetwork()
                     {
                         Url = netWorkUrl,
@@ -559,7 +559,7 @@ namespace Parser.Servises
             try
             {
                 var isExistUrl = _driver.FindElement(By.XPath($"{socialNetworkXPath}")).GetAttribute("href");
-                if (!String.IsNullOrEmpty(isExistUrl))
+                if (!string.IsNullOrEmpty(isExistUrl))
                 {
                     socialUrl = isExistUrl;
 

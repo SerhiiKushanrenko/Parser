@@ -1,13 +1,13 @@
 ﻿using BLL.Helpers;
 using BLL.Interfaces;
+using BLL.Servises.Interfaces;
 using DAL.AdditionalModels;
 using DAL.Models;
 using DAL.Repositories.Interfaces;
 using OpenQA.Selenium;
 using System.Collections.ObjectModel;
 
-
-namespace BLL.Servises
+namespace BLL.Parsers
 {
     public class MainParser : IMainParser
     {
@@ -15,9 +15,11 @@ namespace BLL.Servises
         private readonly IFieldOfResearchRepository _fieldOfResearchRepository;
         private readonly IScientistRepository _scientistRepository;
         private readonly ISupportParser _supportParser;
-        private readonly IRatingServise _ratingService;
+        private readonly IRatingService _ratingService;
         private readonly IScientistFieldOfResearchRepository _scientistFieldOfResearchRepository;
         private readonly IOrganizationRepository _organizationRepository;
+        private readonly ISocialNetworkService _socialNetworkService;
+        private readonly IScientistSocialNetworkRepository _scientistSocialNetworkRepository;
 
         //bibliometrics - we are going to take scientist names + social networks
         private const string URL = @"http://nbuviap.gov.ua/bpnu/index.php?page=search";
@@ -30,12 +32,14 @@ namespace BLL.Servises
         private const string ClickNextPage = "//a[contains(.,'>>')]";
         public MainParser(
             ISupportParser supportParser,
-            IRatingServise ratingService,
+            IRatingService ratingService,
             IWebDriver driver,
             IFieldOfResearchRepository fieldOfResearchRepository,
             IScientistRepository scientistRepository,
             IScientistFieldOfResearchRepository scientistFieldOfResearchRepository,
-            IOrganizationRepository organizationRepository)
+            IOrganizationRepository organizationRepository,
+            ISocialNetworkService socialNetworkService,
+            IScientistSocialNetworkRepository scientistSocialNetworkRepository)
         {
             _supportParser = supportParser;
             _ratingService = ratingService;
@@ -44,6 +48,8 @@ namespace BLL.Servises
             _scientistRepository = scientistRepository;
             _scientistFieldOfResearchRepository = scientistFieldOfResearchRepository;
             _organizationRepository = organizationRepository;
+            _socialNetworkService = socialNetworkService;
+            _scientistSocialNetworkRepository = scientistSocialNetworkRepository;
         }
 
         /// <summary>
@@ -54,93 +60,6 @@ namespace BLL.Servises
         {
             await ParseNameSocialNetworkFieldOfSearch();
 
-            // await ParseDegreeAndListOfWork();
-            #region parse Scientist information (name, social networks) from nbuviap
-
-            _driver.Url = URL;
-
-            await Task.Delay(500);
-
-            try
-            {
-                _driver.FindElement(By.XPath("//input[@class='btn btn-primary mb-2']")).Click();
-
-                await Task.Delay(4000);
-
-                while (true)
-                {
-                    var currentFieldOfResearch = _driver.FindElement(By.XPath("/html/body/main/div[1]/div[1]/div/div/div/table/tbody/tr/td[5]"));
-
-                    var scientistsNamesElements = _driver.FindElements(By.XPath("/html/body/main/div[1]/table/tbody/tr/td[3]"));
-
-                    var organizationsElements = _driver
-                        .FindElements(By.XPath("/html/body/main/div[1]/table/tbody/tr/td[8]"));
-
-                    //var dirtySubdirectionOfWork = _driver.FindElements(By.XPath($"//table/tbody/tr/td[contains(.,'{direction}')]")).Select(e => e.Text).ToList();
-
-                    //var subdirectionOfWork = StrHelper.GetListSubdirection(dirtySubdirectionOfWork);
-
-                    //  var fieldOdResearchId = (await _fieldOfResearchRepository.GetAsync(currentFieldOfResearch.Text))!.Id;
-
-                    for (int i = 0; i < scientistsNamesElements.Count; i++)
-                    {
-                        var rating = _ratingService.GetRatingForScientist(scientistsNamesElements[i].Text);
-
-                        //  var listOfSocial = _supportParser.GetSocialNetwork(scientistsNamesElements[i].Text);
-
-                        //var listOfWorkWithDegree = _supportParser.GetListOfWork(scientistsNamesElements[i].Text);
-
-                        //var degree = listOfWorkWithDegree.degree;
-
-                        var scientist = new Scientist()
-                        {
-                            Name = scientistsNamesElements.ElementAt(i).Text,
-                            //Degree = degree,
-                            //ScientistSocialNetworks = listOfSocial,
-
-
-
-                        };
-                        var foundResult = await _scientistRepository.GetAsync(scientist.Name) is not null;
-
-                        if (!foundResult)
-                        {
-
-                            await _scientistRepository.CreateAsync(scientist);
-                            /*_supportParser.AddWorkToScientist(scientist.Name, listOfWorkWithDegree.Item1);
-                            _supportParser.AddScietistSubdirAndAddDirectionToDb(subdirectionOfWork, direction, scientist.Name)*/
-                            ;
-                            //await _scientistRepository.UpdateAsync(scientist);
-
-                            _scientistFieldOfResearchRepository.CreateAsync(new ScientistFieldOfResearch()
-                            {
-                                // FieldOfResearchId = fieldOdResearchId
-                            });
-                        }
-                    }
-
-                    try
-                    {
-                        _driver.FindElement(By.XPath("//a[contains(.,'>>')]")).Click();
-                    }
-                    catch (OpenQA.Selenium.NoSuchElementException e)
-                    {
-                        break;
-                    }
-                }
-
-
-                //_supportParser.AddWorkToScientists("педагогічні науки");
-            }
-            catch (Exception)
-            {
-                // driver.Quit();
-                _driver.Close();
-                _supportParser.GetGeneralInfo("педагогічні науки", "Педагогіка");
-            }
-
-            _driver.Quit();
-            #endregion
 
 
             #region parse dimensions https://app.dimensions.ai/ ( Fields of Research | Concepts | Orcid social network)
@@ -151,10 +70,7 @@ namespace BLL.Servises
             #endregion
         }
 
-        //private Task ParseDegreeAndListOfWork()
-        //{
 
-        //}
 
         /// <summary>
         /// Get and check current directions 
@@ -286,7 +202,7 @@ namespace BLL.Servises
                 {
                     _driver.FindElement(By.XPath("//a[contains(.,'>>')]")).Click();
                 }
-                catch (OpenQA.Selenium.NoSuchElementException e)
+                catch (NoSuchElementException e)
                 {
                     break;
                 }
@@ -296,11 +212,19 @@ namespace BLL.Servises
         }
 
 
-        public async Task ParseNameSocialNetworkFieldOfSearch()
+        private async Task ParseNameSocialNetworkFieldOfSearch()
         {
             _driver.Url = URL;
 
             await Task.Delay(500);
+
+            //IJavaScriptExecutor jse = (IJavaScriptExecutor)_driver;
+            //jse.ExecuteScript("var tag=document.createElement('dialog');"
+            //                  + "var text=document.createTextNode(\"This is a paragraph.\");"
+            //                  + "tag.appendChild(text);"
+            //                  + "document.body.appendChild(tag);");
+
+
 
             try
             {
@@ -325,7 +249,7 @@ namespace BLL.Servises
                     {
                         _driver.FindElement(By.XPath(ClickNextPage)).Click();
                     }
-                    catch (OpenQA.Selenium.NoSuchElementException e)
+                    catch (NoSuchElementException e)
                     {
                         break;
                     }
@@ -346,80 +270,95 @@ namespace BLL.Servises
             for (int i = 0; i < scientistsNamesElements.Count; i++)
             {
                 var rating = 0;
+                var scientistName = StrHelper.GetScientistName(scientistsNamesElements.ElementAt(i).Text);
                 var fieldOfResearchId = await FieldOfResearchId(ListOfCurrentFieldsOfResearchElements[i]);
 
-                var listOfSocial = _supportParser.GetSocialNetwork(scientistsNamesElements[i].Text, ref rating);
-
-                var organizationId = GetOrganizationId(organizationElements[i].Text);
+                var organizationId = await GetOrganizationId(organizationElements[i].Text);
 
                 var scientist = new Scientist()
                 {
-                    Name = scientistsNamesElements.ElementAt(i).Text,
-                    ScientistSocialNetworks = listOfSocial,
+                    Name = scientistName,
                     OrganizationId = organizationId,
                 };
                 var foundResult = await _scientistRepository.GetAsync(scientist.Name);
 
                 if (foundResult is null)
                 {
-                    _scientistRepository.CreateAsync(scientist);
-                    var scientistId = _scientistRepository.GetAsync(scientist.Name).Result;
+                    await _scientistRepository.CreateAsync(scientist);
+
+                    await AddSocialNetworkAndRating(scientist, rating);
+
                     await _scientistFieldOfResearchRepository.CreateAsync(new ScientistFieldOfResearch()
                     {
                         FieldOfResearchId = fieldOfResearchId,
-                        ScientistId = scientistId.Id
+                        ScientistId = scientist.Id
                     });
-
-
-
                 }
             }
         }
 
-        private int GetOrganizationId(string organizationElements)
+        private async Task AddSocialNetworkAndRating(Scientist scientist, int rating)
         {
-            var organizationId = 0;
-            try
+            var listOfSocial = _socialNetworkService.GetSocialNetwork(scientist, ref rating);
+
+            await _scientistSocialNetworkRepository.CreateAsync(listOfSocial);
+
+            scientist.Rating = rating;
+
+            await _scientistRepository.UpdateAsync(scientist);
+
+        }
+
+        private async Task<int> GetOrganizationId(string organizationElements)
+        {
+            var result = await _organizationRepository.GetAsync(organizationElements);
+            if (result is not null) return result.Id;
+            var newOrganization = new Organization()
             {
-                organizationId = _organizationRepository.GetAsync(organizationElements).Result.Id;
-                return organizationId;
-            }
-            catch (Exception e)
-            {
-                var newOrganization = new Organization()
-                {
-                    Name = organizationElements
-                };
+                Name = organizationElements,
+            };
 
-                _organizationRepository.CreateAsync(newOrganization);
-                organizationId = _organizationRepository.GetAsync(organizationElements).Result.Id;
+            await _organizationRepository.CreateAsync(newOrganization);
+            return newOrganization.Id;
 
 
-                return organizationId;
-            }
+
+
+
+            //var newOrganization = new Organization()
+            //{
+            //    Name = organizationElements,
+            //};
+
+            //_organizationRepository.CreateAsync(newOrganization);
+            //organizationId = _organizationRepository.GetAsync(newOrganization.Name).Result.Id;
+
+
+            //return organizationId;
+
         }
 
         private async Task<int> FieldOfResearchId(string currentFieldOfResearch)
         {
-            int fieldOfResearchId = 0;
-            try
+            var fieldOfResearch = await _fieldOfResearchRepository.GetAsync(currentFieldOfResearch);
+
+            if (fieldOfResearch is not null)
             {
-                fieldOfResearchId = _fieldOfResearchRepository.GetAsync(currentFieldOfResearch).Result.Id;
-                return fieldOfResearchId;
+                return fieldOfResearch.Id;
             }
-            catch (Exception e)
+            var listOfResearch = await GetDirection();
+            foreach (var research in listOfResearch)
             {
-                var listOfResearch = GetDirection();
-                foreach (var research in listOfResearch.Result)
+                if (research.Contains(currentFieldOfResearch))
                 {
-                    if (research.Contains(currentFieldOfResearch))
-                    {
-                        fieldOfResearchId = _fieldOfResearchRepository.GetAsync(currentFieldOfResearch).Result.Id;
-                        return fieldOfResearchId;
-                    }
+                    var fieldOfResearchId = await _fieldOfResearchRepository.GetAsync(currentFieldOfResearch);
+                    return fieldOfResearchId.Id;
                 }
             }
-            return fieldOfResearchId;
+            return fieldOfResearch.Id;
         }
     }
 }
+//var listOfWorkWithDegree = _supportParser.GetListOfWork(scientistsNamesElements[i].Text);
+
+//var degree = listOfWorkWithDegree.degree;

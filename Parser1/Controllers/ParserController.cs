@@ -10,13 +10,13 @@ namespace Parser.Controllers
     {
         private readonly IMainParser _mainParser;
         private readonly ISupportParser _supportParser;
-        private readonly IRatingServise _ratingServise;
+        private readonly IRatingService ratingService;
 
-        public ParserController(IMainParser mainParser, ISupportParser supportParser, IRatingServise ratingServise)
+        public ParserController(IMainParser mainParser, ISupportParser supportParser, IRatingService ratingService)
         {
             _mainParser = mainParser;
             _supportParser = supportParser;
-            _ratingServise = ratingServise;
+            this.ratingService = ratingService;
         }
 
 

@@ -1,7 +1,9 @@
 ﻿
 
 using BLL.Interfaces;
+using BLL.Parsers;
 using BLL.Servises;
+using BLL.Servises.Interfaces;
 using DAL;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,7 +21,8 @@ namespace BLL
 
             services.AddTransient<IMainParser, MainParser>();
             services.AddTransient<ISupportParser, SupportParser>();
-            services.AddTransient<IRatingServise, RatingServise>();
+            services.AddTransient<IRatingService, RatingService>();
+            services.AddTransient<ISocialNetworkService, SocialNetworkService>();
             services.AddScoped<IWebDriver, ChromeDriver>();
         }
 
