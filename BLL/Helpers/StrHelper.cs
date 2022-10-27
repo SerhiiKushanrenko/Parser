@@ -11,7 +11,7 @@ namespace BLL.Helpers
             if (name.Contains('('))
             {
                 var result = name.Split('(');
-                return result[0];
+                return result[0].TrimEnd();
             }
 
             return name;
