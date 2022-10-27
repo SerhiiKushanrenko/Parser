@@ -1,5 +1,4 @@
-﻿using DAL.AdditionalModels;
-using DAL.Models;
+﻿using DAL.Models;
 
 namespace DAL.Repositories.Interfaces
 {
@@ -8,6 +7,6 @@ namespace DAL.Repositories.Interfaces
         Task<int> GetCountAsync();
         Task<ScientistSocialNetwork> GetAsync(int id);
 
-        Task<List<ScientistSocialNetwork>> GetScientistsSocialNetworksAsync(ScientistSocialNetworkFilter? filter = null);
+        //  Task<List<ScientistSocialNetwork>> GetScientistsSocialNetworksAsync(ScientistSocialNetworkFilter? filter = null);
     }
 }

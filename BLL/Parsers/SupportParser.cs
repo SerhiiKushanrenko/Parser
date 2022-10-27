@@ -387,7 +387,6 @@ namespace BLL.Parsers
                     throw;
                 }
 
-
             }
 
         }
@@ -483,96 +482,6 @@ namespace BLL.Parsers
             }
         }
 
-
-        //public void AddScietistSubdirAndAddDirectionToDb(List<string> subDirection, string direction, string scientistName)
-        //{
-        //    var directionId = _context.Directions.FirstOrDefault(e => e.Name.Equals(direction))!.Id;
-
-        //    foreach (var sub in subDirection)
-        //    {
-        //        if (!_context.Subdirections.Any(e => e.Title == sub))
-        //        {
-        //            Subdirection newSub = new Subdirection()
-        //            {
-        //                Title = sub,
-        //                DirectionId = directionId
-
-        //            };
-        //            _context.Subdirections.Add(newSub);
-        //            _context.SaveChanges();
-
-        //            AddScientistSubdirection(scientistName, newSub.Title);
-        //        }
-        //    }
-        //}
-
-        //public void AddScientistSubdirection(string scientistName, string subdirectionTitle)
-        //{
-        //    var scientistId = _context.Scientists.FirstOrDefault(e => e.Name.Equals(scientistName))!.Id;
-        //    var subDirectionId = _context.Subdirections.FirstOrDefault(e => e.Title == subdirectionTitle)!.Id;
-
-        //    ScientistSubdirection scientistSubdirection = new ScientistSubdirection()
-        //    {
-        //        ScientistId = scientistId,
-        //        SubdirectionId = subDirectionId
-        //    };
-        //    _context.ScientistSubdirections.Add(scientistSubdirection);
-        //    _context.SaveChanges();
-        //}
-
-        public List<ScientistSocialNetwork> GetSocialNetwork(string scientistName, ref int rating)
-        {
-            var networksData = new List<(string Xpath, SocialNetworkType NetworkType)>()
-            {
-                (Xpath: $"//td[contains(.,\"{scientistName}\")]/../td/a[contains(@href,'google')]", NetworkType: SocialNetworkType.GoogleScholar),
-                (Xpath: $"//td[contains(.,\"{scientistName}\")]/../td/a[contains(@href,'scopus')]", NetworkType: SocialNetworkType.Scopus),
-                (Xpath: $"//td[contains(.,\"{scientistName}\")]/../td/a[contains(@href,'wos')]", NetworkType: SocialNetworkType.WOS)
-            };
-
-            var result = new List<ScientistSocialNetwork>();
-            foreach (var networkData in networksData)
-            {
-                var netWorkUrl = GetSocialUrl(networkData.Xpath);
-                if (networkData.NetworkType == SocialNetworkType.GoogleScholar)
-                {
-                    rating = ratingService.GetRatingGoogleScholar(netWorkUrl);
-                }
-
-                if (!string.IsNullOrEmpty(netWorkUrl))
-                {
-                    //id scientist
-                    result.Add(new ScientistSocialNetwork()
-                    {
-                        Url = netWorkUrl,
-                        Type = networkData.NetworkType,
-                        // SocialNetworkScientistId = netWorkUrl.GetScientistSocialNetworkAccountId(networkData.NetworkType)
-                    });
-                }
-
-            }
-            return result;
-        }
-
-        public string GetSocialUrl(string socialNetworkXPath)
-        {
-            string? socialUrl = null;
-            try
-            {
-                var isExistUrl = _driver.FindElement(By.XPath($"{socialNetworkXPath}")).GetAttribute("href");
-                if (!string.IsNullOrEmpty(isExistUrl))
-                {
-                    socialUrl = isExistUrl;
-
-                    return socialUrl;
-                }
-            }
-            catch (Exception e)
-            {
-                return socialUrl;
-            }
-
-            return socialUrl;
-        }
 
         public void AddScietistSubdirAndAddDirectionToDb(List<string> subDirection, string direction, string scientistName)
         {

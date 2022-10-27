@@ -1,7 +1,6 @@
 ﻿using BLL.Helpers;
 using BLL.Interfaces;
 using BLL.Servises.Interfaces;
-using DAL.AdditionalModels;
 using DAL.Models;
 using DAL.Repositories.Interfaces;
 using OpenQA.Selenium;
@@ -64,7 +63,7 @@ namespace BLL.Parsers
 
             #region parse dimensions https://app.dimensions.ai/ ( Fields of Research | Concepts | Orcid social network)
             #endregion
-            //+ degree + ListOfWork
+            //+ degree + ListOfWork - source is not working
 
             #region scopus 
             #endregion
@@ -108,123 +107,14 @@ namespace BLL.Parsers
         }
 
         /// <summary>
-        /// Check current count Scientists on DB and Site 
+        /// The main Method By Parser from nbuviap 
         /// </summary>
-        /// <param name="direction"></param>
-        public async Task CheckOnEquals(string direction)
-        {
-            int directionId;
-
-            _driver.Url = @"http://nbuviap.gov.ua/bpnu/index.php?page=search";
-
-            _driver.FindElement(By.XPath("//select[@name='galuz1']")).SendKeys(direction);
-
-            await Task.Delay(500);
-
-            _driver.FindElement(By.XPath("//input[@class='btn btn-primary mb-2']")).Click();
-
-            await Task.Delay(4000);
-
-            var totalCount = _driver.FindElement(By.XPath("/html/body/main/div[1]/div[2]/div/div"));
-            var totalSumOnSite = StrHelper.GetSumFromString(totalCount.Text);
-
-            try
-            {
-                directionId = (await _fieldOfResearchRepository.GetAsync(direction))!.Id;
-                var scientistsCount = await _scientistRepository.GetScientistsCountAsync(new ScientistFilter { FieldOfResearchId = directionId });
-
-                if (totalSumOnSite != scientistsCount)
-                {
-                    await ParseNewScientist(direction);
-                }
-            }
-            catch (Exception e)
-            {
-                //TODO
-                string a = $"{e.Message} такого направления нет ";
-                throw;
-            }
-            _driver.Quit();
-        }
-
-        /// <summary>
-        /// Parse new Scientists on current direction
-        /// </summary>
-        /// <param name="direction"></param>
-        public async Task ParseNewScientist(string direction)
-        {
-            _driver.Url = @"http://nbuviap.gov.ua/bpnu/index.php?page=search";
-
-            _driver.FindElement(By.XPath("//select[@name='galuz1']")).SendKeys(direction);
-
-            await Task.Delay(500);
-
-
-            _driver.FindElement(By.XPath("//input[@class='btn btn-primary mb-2']")).Click();
-
-            await Task.Delay(4000);
-            var existingScientists = await _scientistRepository.GetScientistsListAsync();
-            var existingDirections = await _fieldOfResearchRepository.GetFieldsOfResearchAsync();
-            var scientistsToCreate = new List<Scientist>();
-            while (true)
-            {
-                var currentDirection = _driver.FindElement(By.XPath("/html/body/main/div[1]/div[1]/div/div/div/table/tbody/tr/td[5]"));
-
-                var scientistsNames = _driver.FindElements(By.XPath("/html/body/main/div[1]/table/tbody/tr/td[3]")).ToList(); //.GetAttribute("textContent");
-
-                var organization = _driver
-                    .FindElements(By.XPath("/html/body/main/div[1]/table/tbody/tr/td[8]"));
-
-                await Task.Delay(500);
-
-                var directionId = existingDirections.FirstOrDefault(existingDirection => existingDirection.Title.Equals(currentDirection.Text))?.Id;
-                if (directionId != null)
-                {
-                    //TODO
-                    // А что делать если ее в базе нет?))
-                }
-
-                //forEach не подходит надо доставать еще список организаций и направлений по итерации
-                scientistsNames.ForEach(scientistName =>
-                {
-                    if (!existingScientists.Any(existingScientist => existingScientist.Name.Equals(scientistName.Text)))
-                    {
-                        scientistsToCreate.Add(new Scientist()
-                        {
-                            Name = scientistName.Text,
-                            //Organization = organization.ElementAt(i).Text,
-                            //DirectionId = directionId.Value,
-                        });
-                    }
-                });
-
-                try
-                {
-                    _driver.FindElement(By.XPath("//a[contains(.,'>>')]")).Click();
-                }
-                catch (NoSuchElementException e)
-                {
-                    break;
-                }
-            }
-            await _scientistRepository.CreateAsync(scientistsToCreate);
-            _driver.Quit();
-        }
-
-
+        /// <returns></returns>
         private async Task ParseNameSocialNetworkFieldOfSearch()
         {
             _driver.Url = URL;
 
             await Task.Delay(500);
-
-            //IJavaScriptExecutor jse = (IJavaScriptExecutor)_driver;
-            //jse.ExecuteScript("var tag=document.createElement('dialog');"
-            //                  + "var text=document.createTextNode(\"This is a paragraph.\");"
-            //                  + "tag.appendChild(text);"
-            //                  + "document.body.appendChild(tag);");
-
-
 
             try
             {
@@ -254,12 +144,10 @@ namespace BLL.Parsers
                         break;
                     }
                 }
-
             }
             catch (Exception)
             {
                 _driver.Quit();
-
             }
 
             _driver.Quit();
@@ -320,22 +208,6 @@ namespace BLL.Parsers
 
             await _organizationRepository.CreateAsync(newOrganization);
             return newOrganization.Id;
-
-
-
-
-
-            //var newOrganization = new Organization()
-            //{
-            //    Name = organizationElements,
-            //};
-
-            //_organizationRepository.CreateAsync(newOrganization);
-            //organizationId = _organizationRepository.GetAsync(newOrganization.Name).Result.Id;
-
-
-            //return organizationId;
-
         }
 
         private async Task<int> FieldOfResearchId(string currentFieldOfResearch)
@@ -359,6 +231,3 @@ namespace BLL.Parsers
         }
     }
 }
-//var listOfWorkWithDegree = _supportParser.GetListOfWork(scientistsNamesElements[i].Text);
-
-//var degree = listOfWorkWithDegree.degree;

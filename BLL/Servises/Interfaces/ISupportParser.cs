@@ -1,6 +1,4 @@
-﻿using DAL.Models;
-
-namespace BLL.Interfaces
+﻿namespace BLL.Interfaces
 {
     public interface ISupportParser
     {
@@ -12,9 +10,5 @@ namespace BLL.Interfaces
 
         public void AddScietistSubdirAndAddDirectionToDb(List<string> subDirection, string direction, string scientistName);
 
-        //  public void AddSocialNetworkToScientist(List<string> listOfSocial, Scientist scientist);
-        public List<ScientistSocialNetwork> GetSocialNetwork(string scientistName, ref int rating);
-
-        public string GetSocialUrl(string socialElement);
     }
 }

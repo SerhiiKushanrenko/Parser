@@ -8,7 +8,7 @@ namespace DAL.Models
         public string Url { get; set; }
         public int ScientistId { get; set; }
         public Scientist? Scientist { get; set; }
-        public string SocialNetworkScientistId { get; set; }
+        //public string SocialNetworkScientistId { get; set; }
         public SocialNetworkType Type { get; set; }
     }
 }

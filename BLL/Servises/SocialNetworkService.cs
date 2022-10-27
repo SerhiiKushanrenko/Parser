@@ -1,5 +1,4 @@
-﻿using BLL.Helpers;
-using BLL.Interfaces;
+﻿using BLL.Interfaces;
 using BLL.Servises.Interfaces;
 using DAL.AdditionalModels;
 using DAL.Models;
@@ -41,7 +40,7 @@ namespace BLL.Servises
                         ScientistId = scientist.Id,
                         Url = netWorkUrl,
                         Type = networkData.NetworkType,
-                        SocialNetworkScientistId = netWorkUrl.GetScientistSocialNetworkAccountId(networkData.NetworkType)
+                        // SocialNetworkScientistId = netWorkUrl.GetScientistSocialNetworkAccountId(networkData.NetworkType)
                     });
                 }
 
