@@ -20,7 +20,10 @@ namespace BLL.Parsers
 
         //irbis-nbuv.gov.ua - we are going to take scientist degree and listOfWork (site is not working)
         private const string URL = @"http://irbis-nbuv.gov.ua/cgi-bin/suak/corp.exe?C21COM=F&I21DBN=SAUA&P21DBN=SAUA";
-
+        private const string InputScientist = "1_S21STR";
+        private const string StartSearch = "//input[@type='submit']";
+        private const string GetListOfWork = "/html/body/div[1]/center/table[2]/tbody/tr[4]/td[1]/ol[1]/li";
+        private const string GetDegree = "//table[2]/tbody/tr[2]/td/table/tbody/tr/td[2]";
 
         public SupportParser
             (IRatingService ratingService,
@@ -40,53 +43,112 @@ namespace BLL.Parsers
             _scientistWorkRepository = scientist;
         }
 
-        public void AddListOfWorkAndDegree()
+        public async Task AddListOfWorkAndDegree()
         {
-            List<string>? listOfWork;
+            var listOfScientist = _scientistRepository.GetAll();
             IWebDriver driver = new ChromeDriver();
+            // need test with _driver
+            driver.Url = URL;
 
-            driver.Url = @"http://irbis-nbuv.gov.ua/cgi-bin/suak/corp.exe?C21COM=F&I21DBN=SAUA&P21DBN=SAUA";
-
-            //driver.FindElement(By.Name("1_S21STR")).SendKeys();
-
-            driver.FindElement(By.XPath("//input[@type='submit']")).Click();
-
-            try
+            foreach (var scientist in listOfScientist)
             {
-                var IsWorkExist = driver.FindElement(By.XPath(
-                    "//table[contains(@class,'advanced')]//tbody//td[contains(.,'За вашим запитом нічого не знайдено, уточніть запит.')]//big"));
-                listOfWork = null;
+                driver.FindElement(By.Name(InputScientist)).SendKeys(scientist.Name);
+                driver.FindElement(By.XPath(StartSearch)).Click();
 
-                driver.Close();
-                var result = (listOfWork, "null");
+                var isScientistExist = driver.FindElement(By.XPath(
+                    "//table[contains(@class,'advanced')]//tbody//td[contains(.,'За вашим запитом нічого не знайдено, уточніть запит.')]//big")).Displayed;
+                if (isScientistExist)
+                {
+                    driver.Close();
+                }
+                else
+                {
+                    driver.FindElement(By.XPath("//table[2]/tbody/tr/td[3]/p/a")).Click();
 
-            }
-            catch (Exception e)
-            {
-                driver.FindElement(By.XPath("//table[2]/tbody/tr/td[3]/p/a")).Click();
+                    await Task.Delay(3000);
 
-                Task.Delay(3000);
+                    driver.FindElement(By.XPath("//a[@class='c']")).Click();
 
-                driver.FindElement(By.XPath("//a[@class='c']")).Click();
+                    var dirtyDegree = driver.FindElement(By.XPath(GetDegree)).Text;
 
-                var dirtyDegree = driver.FindElement(By.XPath("//table[2]/tbody/tr[2]/td/table/tbody/tr/td[2]")).Text;
+                    var degree = StrHelper.GetOnlyDegree(dirtyDegree);
+                    await Task.Delay(2000);
 
-                var degree = StrHelper.GetOnlyDegree(dirtyDegree);
-                Task.Delay(5000);
+                    var workList = await GetWorkListAsync(driver);
 
-                listOfWork =
-                    driver.FindElements(
-                            By.XPath("/html/body/div[1]/center/table[2]/tbody/tr[4]/td[1]/ol[1]/li"))
-                        .Select(x => x.Text)
-                        .ToList();
-
-                driver.Quit();
-
-                var result = (listOfWork, degree);
+                    scientist.Degree = degree;
+                    await _scientistRepository.UpdateAsync(scientist);
 
 
+                    await AddScientistWorkAsync(workList, scientist);
+
+                    driver.Quit();
+                }
             }
         }
+
+        private async Task AddScientistWorkAsync(List<Work> workList, Scientist scientist)
+        {
+            List<ScientistWork> scientistWorks = new List<ScientistWork>();
+            foreach (var work in workList)
+            {
+                ScientistWork newWork = new ScientistWork()
+                {
+                    ScientistId = scientist.Id,
+                    WorkId = work.Id,
+                };
+                scientistWorks.Add(newWork);
+            }
+            await _scientistWorkRepository.CreateAsync(scientistWorks);
+        }
+
+        private async Task<List<Work>> GetWorkListAsync(IWebDriver driver)
+        {
+            List<Work> workList = new();
+
+            var listOfWork =
+                driver.FindElements(
+                        By.XPath(GetListOfWork))
+                    .Select(x => x.Text)
+                    .ToList();
+
+            foreach (var work in listOfWork)
+            {
+                var year = StrHelper.SplitYearFromWork(work);
+                var newWork = new Work()
+                {
+                    Name = work,
+                    Year = year,
+                };
+                workList.Add(newWork);
+            }
+
+            await _workRepository.CreateAsync(workList);
+            return workList;
+        }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        // old methods below
+
+
+
+
+
+
 
         /// <summary>
         /// Add Work to Db for one scientist  
@@ -487,5 +549,12 @@ namespace BLL.Parsers
         {
             throw new NotImplementedException();
         }
+
+        Task ISupportParser.AddWorkToScientists(string direction)
+        {
+            throw new NotImplementedException();
+        }
+
+
     }
 }

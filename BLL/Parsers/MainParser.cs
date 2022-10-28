@@ -59,13 +59,17 @@ namespace BLL.Parsers
         {
             await ParseNameSocialNetworkFieldOfSearch();
 
+            //-source is not working
+            await _supportParser.AddListOfWorkAndDegree();
 
+            #region parse dimensions https: //app.dimensions.ai/ ( Fields of Research | Concepts | Orcid social network)
 
-            #region parse dimensions https://app.dimensions.ai/ ( Fields of Research | Concepts | Orcid social network)
             #endregion
-            //+ degree + ListOfWork - source is not working
 
-            #region scopus 
+
+
+            #region scopus
+
             #endregion
         }
 
