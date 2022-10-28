@@ -1,7 +1,6 @@
-﻿
-
-using BLL.Interfaces;
+﻿using BLL.Interfaces;
 using BLL.Parsers;
+using BLL.Parsers.Interfaces;
 using BLL.Servises;
 using BLL.Servises.Interfaces;
 using DAL;
@@ -9,7 +8,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
-using Parser.Servises;
+using Parser.Services;
 
 namespace BLL
 {

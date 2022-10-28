@@ -1,4 +1,4 @@
-﻿namespace BLL.Interfaces
+﻿namespace BLL.Parsers.Interfaces
 {
     public interface IRatingService
     {

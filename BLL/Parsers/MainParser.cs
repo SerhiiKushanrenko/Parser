@@ -1,5 +1,6 @@
 ﻿using BLL.Helpers;
 using BLL.Interfaces;
+using BLL.Parsers.Interfaces;
 using BLL.Servises.Interfaces;
 using DAL.AdditionalModels;
 using DAL.Models;

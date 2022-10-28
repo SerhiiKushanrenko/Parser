@@ -1,11 +1,11 @@
 ﻿using BLL.Helpers;
-using BLL.Interfaces;
+using BLL.Parsers.Interfaces;
 using DAL.Repositories.Interfaces;
 using OpenQA.Selenium;
 using OpenQA.Selenium.Chrome;
 
 
-namespace Parser.Servises
+namespace Parser.Services
 {
     public class RatingService : IRatingService
     {
