@@ -82,7 +82,6 @@ namespace BLL.Helpers
 
         public static List<string> GetListFieldOfSearch(ReadOnlyCollection<IWebElement> ListFieldOfSearchElements)
         {
-
             var result = new List<string>();
             for (int i = 0; i < ListFieldOfSearchElements.Count; i++)
             {
@@ -90,10 +89,8 @@ namespace BLL.Helpers
                 result.Add(tempSubDirection[0]);
             }
             return result;
-
-
-
         }
+
         public static List<string> GetListSubdirection(List<string> listOfSubDirection)
         {
             char[] needToDelete = { 'П', 'е', 'д', 'а', 'г', 'о', 'г', 'і', 'к', 'а', '\r', '\n' };
@@ -113,8 +110,8 @@ namespace BLL.Helpers
         {
             return socialNetworkType switch
             {
-                SocialNetworkType.GoogleScholar => new Uri(socialNetworkUrl).Query.Split("&").FirstOrDefault(parameter => parameter.Split("=")[0].Equals("authorId")).Split("=")[1],
-                SocialNetworkType.Scopus => new Uri(socialNetworkUrl).Query.Split("&").FirstOrDefault(parameter => parameter.Split("=")[0].Equals("user")).Split("=")[1],
+                SocialNetworkType.GoogleScholar => new Uri(socialNetworkUrl).Query.Split("&").FirstOrDefault(parameter => parameter.Split("=")[0].Equals("?user")).Split("=")[1],
+                SocialNetworkType.Scopus => new Uri(socialNetworkUrl).Query.Split("&").FirstOrDefault(parameter => parameter.Split("=")[0].Equals("?authorId")).Split("=")[1],
                 SocialNetworkType.WOS => new Uri(socialNetworkUrl).AbsolutePath.Split("/").Last(),
                 SocialNetworkType.ORCID => throw new Exception(),
                 _ => throw new Exception(),

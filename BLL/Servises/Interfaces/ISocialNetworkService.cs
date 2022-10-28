@@ -4,7 +4,7 @@ namespace BLL.Servises.Interfaces
 {
     public interface ISocialNetworkService
     {
-        public List<ScientistSocialNetwork> GetSocialNetwork(Scientist scientist, ref int rating);
+        public void GetSocialNetwork(Scientist scientist);
 
         public string GetSocialUrl(string socialNetworkXPath);
 

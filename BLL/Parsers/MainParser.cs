@@ -1,6 +1,7 @@
 ﻿using BLL.Helpers;
 using BLL.Interfaces;
 using BLL.Servises.Interfaces;
+using DAL.AdditionalModels;
 using DAL.Models;
 using DAL.Repositories.Interfaces;
 using OpenQA.Selenium;
@@ -21,14 +22,14 @@ namespace BLL.Parsers
         private readonly IScientistSocialNetworkRepository _scientistSocialNetworkRepository;
 
         //bibliometrics - we are going to take scientist names + social networks
-        private const string URL = @"http://nbuviap.gov.ua/bpnu/index.php?page=search";
+        private const string NbuviapURL = @"http://nbuviap.gov.ua/bpnu/index.php?page=search";
 
 
         private const string GetListOfScientists = "//main/div/table/tbody/tr/td[3]";
         private const string GetListOfOrganizations = "//table/tbody/tr/td[8]";
-        private const string GetListOfResearh = "//table//tr/td[7]";
-        private const string ClickButtonSearch = "//input[@class='btn btn-primary mb-2']";
-        private const string ClickNextPage = "//a[contains(.,'>>')]";
+        private const string ResearchElementXPath = "//table//tr/td[7]";
+        private const string SearchButtonXPath = "//input[@class='btn btn-primary mb-2']";
+        private const string NextPageButtonXPath = "//a[contains(.,'>>')]";
         public MainParser(
             ISupportParser supportParser,
             IRatingService ratingService,
@@ -65,8 +66,6 @@ namespace BLL.Parsers
             #region parse dimensions https: //app.dimensions.ai/ ( Fields of Research | Concepts | Orcid social network)
 
             #endregion
-
-
 
             #region scopus
 
@@ -116,21 +115,21 @@ namespace BLL.Parsers
         /// <returns></returns>
         private async Task ParseNameSocialNetworkFieldOfSearch()
         {
-            _driver.Url = URL;
+            _driver.Url = NbuviapURL;
 
             await Task.Delay(500);
 
             try
             {
-                _driver.FindElement(By.XPath(ClickButtonSearch)).Click();
+                _driver.FindElement(By.XPath(SearchButtonXPath)).Click();
 
                 await Task.Delay(4000);
 
                 while (true)
                 {
-                    var currentFieldsOfResearchElements = _driver.FindElements(By.XPath(GetListOfResearh));
+                    var fieldsOfResearchElements = _driver.FindElements(By.XPath(ResearchElementXPath));
 
-                    var ListOfCurrentFieldsOfResearchElements = StrHelper.GetListFieldOfSearch(currentFieldsOfResearchElements);
+                    var ListOfCurrentFieldsOfResearchElements = StrHelper.GetListFieldOfSearch(fieldsOfResearchElements);
 
                     var scientistsNamesElements = _driver.FindElements(By.XPath(GetListOfScientists));
 
@@ -141,7 +140,7 @@ namespace BLL.Parsers
 
                     try
                     {
-                        _driver.FindElement(By.XPath(ClickNextPage)).Click();
+                        _driver.FindElement(By.XPath(NextPageButtonXPath)).Click();
                     }
                     catch (NoSuchElementException e)
                     {
@@ -161,7 +160,6 @@ namespace BLL.Parsers
         {
             for (int i = 0; i < scientistsNamesElements.Count; i++)
             {
-                var rating = 0;
                 var scientistName = StrHelper.GetScientistName(scientistsNamesElements.ElementAt(i).Text);
                 var fieldOfResearchId = await FieldOfResearchId(ListOfCurrentFieldsOfResearchElements[i]);
 
@@ -171,34 +169,33 @@ namespace BLL.Parsers
                 {
                     Name = scientistName,
                     OrganizationId = organizationId,
+                    ScientistFieldsOfResearch = new List<ScientistFieldOfResearch>
+                    {
+                        new ScientistFieldOfResearch()
+                        {
+                            FieldOfResearchId = fieldOfResearchId
+                        } 
+                    }
                 };
                 var foundResult = await _scientistRepository.GetAsync(scientist.Name);
 
                 if (foundResult is null)
                 {
+                    _socialNetworkService.GetSocialNetwork(scientist);
+                    ExtractScientistHRating(scientist);
+
                     await _scientistRepository.CreateAsync(scientist);
-
-                    await AddSocialNetworkAndRating(scientist, rating);
-
-                    await _scientistFieldOfResearchRepository.CreateAsync(new ScientistFieldOfResearch()
-                    {
-                        FieldOfResearchId = fieldOfResearchId,
-                        ScientistId = scientist.Id
-                    });
                 }
             }
         }
 
-        private async Task AddSocialNetworkAndRating(Scientist scientist, int rating)
+        private void ExtractScientistHRating(Scientist scientist)
         {
-            var listOfSocial = _socialNetworkService.GetSocialNetwork(scientist, ref rating);
-
-            await _scientistSocialNetworkRepository.CreateAsync(listOfSocial);
-
-            scientist.Rating = rating;
-
-            await _scientistRepository.UpdateAsync(scientist);
-
+            var googleScholar = scientist.ScientistSocialNetworks.FirstOrDefault(networkData => networkData.Type == SocialNetworkType.GoogleScholar);
+            if (googleScholar is not null)
+            {
+                scientist.Rating = _ratingService.GetRatingGoogleScholar(googleScholar.Url);
+            }
         }
 
         private async Task<int> GetOrganizationId(string organizationElements)

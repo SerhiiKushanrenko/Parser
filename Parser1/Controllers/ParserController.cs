@@ -24,7 +24,7 @@ namespace Parser.Controllers
         public async Task<IActionResult> StartMainParser()
         {
             await _mainParser.StartParsing();
-            return Ok();
+            return Ok("Parsing succesfully started");
         }
 
         /// <summary>
