@@ -5,6 +5,7 @@ using DAL.Models;
 using DAL.Repositories.Interfaces;
 using Google.Api.Gax.ResourceNames;
 using Google.Cloud.Translate.V3;
+using Microsoft.EntityFrameworkCore;
 using OpenQA.Selenium;
 
 namespace BLL.Parsers
@@ -36,9 +37,9 @@ namespace BLL.Parsers
 
         public async Task StartParse()
         {
-            var listOfScientists = _scientistRepository.GetAll();
-
-            foreach (var scientist in listOfScientists)
+            var scientists = await _scientistRepository.GetAll().ToListAsync();
+            var fieldsOfResearches = await _fieldOfResearchRepository.GetAll().Include(fieldOfResearch => fieldOfResearch.ChildFieldsOfResearch).ToListAsync();
+            foreach (var scientist in scientists)
             {
                 _driver.Url = DimensionsUrl;
 
@@ -82,38 +83,47 @@ namespace BLL.Parsers
                     .Select(e => e.Text)
                     .ToList();
 
-                var fieldOfResearches = new List<FieldOfResearch>();
+                var scientistFieldsOfResearches = new List<FieldOfResearch>();
 
                 foreach (var fieldOfResearch in listOfFieldsOfResearch)
                 {
-                    if (fieldOfResearch.Any(e => char.IsDigit(e)))
+                    if (!fieldOfResearch.All(e => char.IsDigit(e)))
                     {
-                        var splitResult = fieldOfResearch.Split();
-
-                        if (splitResult[0].Length == MajorFieldOfResearchLength)
-                        {
-                            FieldOfResearch newFieldOfResearch = new()
-                            {
-                                ANZSRC = int.Parse(splitResult[0]),
-                                Title = string.Join(" ", splitResult),
-                            };
-                            _fieldOfResearchRepository.CreateAsync(newFieldOfResearch);
-                        }
-                        else if (splitResult[0].Length == MinorSearch)
-                        {
-
-                            FieldOfResearch newFieldOfResearch = new()
-                            {
-                                ANZSRC = int.Parse(splitResult[0]),
-                                Title = string.Join(" ", splitResult),
-                                ParentFieldOfResearchId = _fieldOfResearchRepository.GetAll().Last().Id
-                            };
-                            fieldOfResearches.Add(newFieldOfResearch);
-                        }
+                        continue;
                     }
+
+                    var splitResult = fieldOfResearch.Split();
+
+                    FieldOfResearch newFieldOfResearch = new()
+                    {
+                        ANZSRC = int.Parse(splitResult[0]),
+                        Title = string.Join(" ", splitResult),
+                    };
+                    scientistFieldsOfResearches.Add(newFieldOfResearch);
                 }
-                _fieldOfResearchRepository.UpdateAsync(fieldOfResearches);
+
+                var parsedMajorFieldsOfResearch = new List<FieldOfResearch>();
+                var subFieldsOfResearch = new List<FieldOfResearch>();
+
+                foreach (var scientistFieldOfResearch in scientistFieldsOfResearches)
+                {
+                    if (scientistFieldOfResearch.ANZSRC.ToString().Length == 2)
+                        parsedMajorFieldsOfResearch.Add(scientistFieldOfResearch);
+                    else
+                        subFieldsOfResearch.Add(scientistFieldOfResearch);
+                }
+                foreach (var parsedMajorFieldOfResearch in parsedMajorFieldsOfResearch)
+                {
+                    var existingFieldOfResearch = fieldsOfResearches.FirstOrDefault(existingFieldOfResearch => existingFieldOfResearch.ANZSRC == parsedMajorFieldOfResearch.ANZSRC);
+                    if (existingFieldOfResearch != null)
+                    {
+                        var missingChildFieldsOfResearch = parsedMajorFieldOfResearch.ChildFieldsOfResearch.Where(parsedChildFieldOfResearch => !existingFieldOfResearch.ChildFieldsOfResearch.Any(existingChildFieldOfResearch => existingChildFieldOfResearch.ANZSRC == parsedChildFieldOfResearch.ANZSRC));
+
+                    }
+                    parsedMajorFieldOfResearch.ChildFieldsOfResearch = subFieldsOfResearch.Where(fieldOfResearch => fieldOfResearch.ANZSRC.ToString()[..2].Equals(parsedMajorFieldOfResearch.ANZSRC.ToString()));
+                }
             }
+            await _scientistRepository.UpdateAsync(scientists);
             _driver.Quit();
 
         }

@@ -9,8 +9,8 @@
         public int? ParentFieldOfResearchId { get; set; }
         public FieldOfResearch? ParentFieldOfResearch { get; set; }
 
-        public virtual ICollection<ScientistFieldOfResearch> ScientistsFieldsOfResearch { get; set; }
-        public virtual ICollection<FieldOfResearch> ChildFieldsOfResearch { get; set; }
+        public virtual IEnumerable<ScientistFieldOfResearch> ScientistsFieldsOfResearch { get; set; }
+        public virtual IEnumerable<FieldOfResearch> ChildFieldsOfResearch { get; set; }
 
     }
 }

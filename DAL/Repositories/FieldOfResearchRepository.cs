@@ -19,11 +19,11 @@ namespace DAL.Repositories
 
         public async Task<FieldOfResearch> GetAsync(int id)
         {
-            return await GetAll().FirstOrDefaultAsync(direction => direction.Id == id);
+            return await GetAll().FirstOrDefaultAsync(fieldOfResearch => fieldOfResearch.Id == id);
         }
-        public async Task<FieldOfResearch> GetAsync(string name)
+        public async Task<FieldOfResearch> GetAsync(string title)
         {
-            return await GetAll().FirstOrDefaultAsync(direction => direction.Title.Equals(name));
+            return await GetAll().FirstOrDefaultAsync(fieldOfResearch => fieldOfResearch.Title.Equals(title));
         }
 
         public async Task<List<FieldOfResearch>> GetFieldsOfResearchAsync(FieldOfResearchFilter? filter = null)

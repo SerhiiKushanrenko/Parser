@@ -9,7 +9,7 @@ namespace DAL.EF
         public DbSet<ScientistFieldOfResearch> ScientistFieldOfResearch { get; set; } = null!;
         public DbSet<ScientistWork> ScientistsWork { get; set; } = null!;
         public DbSet<Work> Works { get; set; } = null!;
-        public DbSet<FieldOfResearch> FieldOfResearch { get; set; } = null!;
+        public DbSet<ScientistFieldOfResearch> FieldOfResearch { get; set; } = null!;
         public DbSet<ScientistSocialNetwork> SocialNetworkOfScientists { get; set; } = null!;
 
         public ParserDbContext()
@@ -50,12 +50,12 @@ namespace DAL.EF
                 .WithMany(g => g.Scientists)
                 .HasForeignKey(s => s.OrganizationId);
 
-            modelBuilder.Entity<FieldOfResearch>()
+            modelBuilder.Entity<ScientistFieldOfResearch>()
                 .HasMany(s => s.ScientistsFieldsOfResearch)
                 .WithOne(g => g.FieldOfResearch)
                 .HasForeignKey(s => s.FieldOfResearchId);
 
-            modelBuilder.Entity<FieldOfResearch>()
+            modelBuilder.Entity<ScientistFieldOfResearch>()
                 .HasOne(s => s.ParentFieldOfResearch)
                 .WithMany(g => g.ChildFieldsOfResearch)
                 .HasForeignKey(s => s.ParentFieldOfResearchId);
