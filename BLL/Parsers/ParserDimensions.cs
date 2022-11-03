@@ -68,7 +68,7 @@ namespace BLL.Parsers
 
                 await AddOrcidSocialNetwork(scientist);
 
-                await Task.Delay(2500);
+                await Task.Delay(3500);
 
                 var listOfFieldsOfResearch = _driver
                     .FindElements(By.XPath(
@@ -156,7 +156,7 @@ namespace BLL.Parsers
                 parsedMajorFieldOfResearch.ChildFieldsOfResearch = parsedSubFieldsOfResearch.Where(fieldOfResearch =>
                     fieldOfResearch.ANZSRC.ToString()[..2].Equals(parsedMajorFieldOfResearch.ANZSRC.ToString()));
 
-                // need get Id FieldOfResearch
+
                 var newScientistFieldOfResearch = new ScientistFieldOfResearch()
                 {
                     FieldOfResearch = parsedMajorFieldOfResearch,
