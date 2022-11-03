@@ -117,7 +117,7 @@ namespace BLL.Helpers
                 SocialNetworkType.GoogleScholar => new Uri(socialNetworkUrl).Query.Split("&").FirstOrDefault(parameter => parameter.Split("=")[0].Equals("?user")).Split("=")[1],
                 SocialNetworkType.Scopus => new Uri(socialNetworkUrl).Query.Split("&").FirstOrDefault(parameter => parameter.Split("=")[0].Equals("?authorId")).Split("=")[1],
                 SocialNetworkType.WOS => new Uri(socialNetworkUrl).AbsolutePath.Split("/").Last(),
-                SocialNetworkType.ORCID => throw new Exception(),
+                SocialNetworkType.ORCID => new Uri(socialNetworkUrl).AbsolutePath.Split("/").Last(),
                 _ => throw new Exception(),
             };
         }

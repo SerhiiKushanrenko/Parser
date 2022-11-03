@@ -106,7 +106,7 @@ namespace BLL.Parsers
             var nonExistingDirections = foundDirections
                 .Where(foundDirection => !existingDirections.Any(existingDirection => existingDirection.Title.Equals(foundDirection)));
 
-            await _fieldOfResearchRepository.CreateAsync(nonExistingDirections.Select(directionName => new ScientistFieldOfResearch()
+            await _fieldOfResearchRepository.CreateAsync(nonExistingDirections.Select(directionName => new FieldOfResearch()
             {
                 Title = directionName
             }));

@@ -14,6 +14,8 @@ namespace BLL.Parsers
     {
         private readonly IFieldOfResearchRepository _fieldOfResearchRepository;
         private readonly IScientistRepository _scientistRepository;
+        private readonly IScientistFieldOfResearchRepository _scientistFieldOfResearchRepository;
+        private readonly IScientistSocialNetworkRepository _scientistSocialNetworkRepository;
         private readonly IWebDriver _driver;
 
         private const string SetInputOfSearch = "//div[contains(@class,'sc-jccYHG ghibKI')]/textarea";
@@ -27,12 +29,15 @@ namespace BLL.Parsers
         private const int MajorFieldOfResearchLength = 2;
         private const int MinorSearch = 4;
 
+
         private const string DimensionsUrl = @"https://app.dimensions.ai/discover/publication";
-        public ParserDimensions(IScientistRepository scientistRepository, IWebDriver driver, IFieldOfResearchRepository fieldOfResearchRepository)
+        public ParserDimensions(IScientistRepository scientistRepository, IWebDriver driver, IFieldOfResearchRepository fieldOfResearchRepository, IScientistFieldOfResearchRepository scientistFieldOfResearchRepository, IScientistSocialNetworkRepository scientistSocialNetworkRepository)
         {
             _scientistRepository = scientistRepository;
             _driver = driver;
             _fieldOfResearchRepository = fieldOfResearchRepository;
+            _scientistFieldOfResearchRepository = scientistFieldOfResearchRepository;
+            _scientistSocialNetworkRepository = scientistSocialNetworkRepository;
         }
 
         public async Task StartParse()
@@ -47,35 +52,23 @@ namespace BLL.Parsers
 
                 _driver.FindElement(By.XPath(SetInputOfSearch)).SendKeys(scientistSecondName);
 
-                _driver.FindElement(By.CssSelector(SearchButtomCssSelector)).Click();
-                await Task.Delay(5000);
-
-                _driver.FindElement(By.XPath(ResultOfSearchButton)).Click();
-                await Task.Delay(5000);
-
-                _driver.FindElement(By.XPath($"//div[contains(@class,'sc-cVtpRj gwjQJA')]//li[contains(.,'{scientistSecondName}')]")).Click();
-                await Task.Delay(5000);
-
-                _driver.FindElement(By.XPath(FindCurrentScientist)).Click();
-                await Task.Delay(5000);
-
-                _driver.FindElement(By.XPath(ViewProfileScientist)).Click();
-                await Task.Delay(5000);
-
-                if (_driver.FindElement(By.XPath(FindOrcidUrl)).Displayed)
+                List<(string, Func<string, By>)> ListOfSearchElements = new()
                 {
-                    var orcidUrl = _driver.FindElement(By.XPath(FindOrcidUrl)).GetAttribute("href");
+                    (SearchButtomCssSelector, By.CssSelector),
+                    (ResultOfSearchButton, By.XPath),
+                    ( $"//div[contains(@class,'sc-cVtpRj gwjQJA')]//li[contains(.,'{scientistSecondName}')]", By.XPath),
+                    (FindCurrentScientist, By.XPath),
+                    (ViewProfileScientist, By.XPath)
+                };
 
-                    var newSSN = new ScientistSocialNetwork()
-                    {
-                        ScientistId = scientist.Id,
-                        Url = orcidUrl,
-                        Type = SocialNetworkType.ORCID,
-                        SocialNetworkScientistId = orcidUrl.GetScientistSocialNetworkAccountId(SocialNetworkType.ORCID)
-                    };
-
-                    scientist.ScientistSocialNetworks.Add(newSSN);
+                foreach (var searchElement in ListOfSearchElements)
+                {
+                    await CheckAndClickElement(searchElement.Item1, searchElement.Item2);
                 }
+
+                await AddOrcidSocialNetwork(scientist);
+
+                await Task.Delay(2500);
 
                 var listOfFieldsOfResearch = _driver
                     .FindElements(By.XPath(
@@ -83,48 +76,111 @@ namespace BLL.Parsers
                     .Select(e => e.Text)
                     .ToList();
 
-                var scientistFieldsOfResearches = new List<FieldOfResearch>();
-
-                foreach (var fieldOfResearch in listOfFieldsOfResearch)
-                {
-                    if (!fieldOfResearch.All(e => char.IsDigit(e)))
-                    {
-                        continue;
-                    }
-
-                    var splitResult = fieldOfResearch.Split();
-
-                    FieldOfResearch newFieldOfResearch = new()
-                    {
-                        ANZSRC = int.Parse(splitResult[0]),
-                        Title = string.Join(" ", splitResult),
-                    };
-                    scientistFieldsOfResearches.Add(newFieldOfResearch);
-                }
-
-                var parsedMajorFieldsOfResearch = new List<FieldOfResearch>();
-                var subFieldsOfResearch = new List<FieldOfResearch>();
-
-                foreach (var scientistFieldOfResearch in scientistFieldsOfResearches)
-                {
-                    if (scientistFieldOfResearch.ANZSRC.ToString().Length == 2)
-                        parsedMajorFieldsOfResearch.Add(scientistFieldOfResearch);
-                    else
-                        subFieldsOfResearch.Add(scientistFieldOfResearch);
-                }
-                foreach (var parsedMajorFieldOfResearch in parsedMajorFieldsOfResearch)
-                {
-                    var existingFieldOfResearch = fieldsOfResearches.FirstOrDefault(existingFieldOfResearch => existingFieldOfResearch.ANZSRC == parsedMajorFieldOfResearch.ANZSRC);
-                    if (existingFieldOfResearch != null)
-                    {
-                        var missingChildFieldsOfResearch = parsedMajorFieldOfResearch.ChildFieldsOfResearch.Where(parsedChildFieldOfResearch => !existingFieldOfResearch.ChildFieldsOfResearch.Any(existingChildFieldOfResearch => existingChildFieldOfResearch.ANZSRC == parsedChildFieldOfResearch.ANZSRC));
-
-                    }
-                    parsedMajorFieldOfResearch.ChildFieldsOfResearch = subFieldsOfResearch.Where(fieldOfResearch => fieldOfResearch.ANZSRC.ToString()[..2].Equals(parsedMajorFieldOfResearch.ANZSRC.ToString()));
-                }
+                await CreateScientistFieldOfResearch(listOfFieldsOfResearch, fieldsOfResearches, scientist);
             }
             await _scientistRepository.UpdateAsync(scientists);
             _driver.Quit();
+
+        }
+
+
+        private async Task AddOrcidSocialNetwork(Scientist scientist)
+        {
+            if (_driver.FindElement(By.XPath(FindOrcidUrl)).Displayed)
+            {
+                var orcidUrl = _driver.FindElement(By.XPath(FindOrcidUrl)).GetAttribute("href");
+
+                var newSSN = new ScientistSocialNetwork()
+                {
+                    ScientistId = scientist.Id,
+                    Url = orcidUrl,
+                    Type = SocialNetworkType.ORCID,
+                    SocialNetworkScientistId = orcidUrl.GetScientistSocialNetworkAccountId(SocialNetworkType.ORCID)
+                };
+                await _scientistSocialNetworkRepository.UpdateAsync(newSSN);
+            }
+        }
+
+        private async Task CreateScientistFieldOfResearch(List<string> listOfFieldsOfResearch, List<FieldOfResearch> fieldsOfResearches,
+                                                          Scientist scientist)
+        {
+            var scientistFieldsOfResearches = new List<FieldOfResearch>();
+
+            foreach (var fieldOfResearch in listOfFieldsOfResearch)
+            {
+                if (!fieldOfResearch.Any(e => char.IsDigit(e)))
+                {
+                    continue;
+                }
+
+                var splitResult = fieldOfResearch.Split();
+
+                FieldOfResearch newFieldOfResearch = new()
+                {
+                    ANZSRC = int.Parse(splitResult[0]),
+                    Title = string.Join(" ", splitResult),
+                };
+                scientistFieldsOfResearches.Add(newFieldOfResearch);
+            }
+
+            var parsedMajorFieldsOfResearch = new List<FieldOfResearch>();
+            var parsedSubFieldsOfResearch = new List<FieldOfResearch>();
+
+            foreach (var scientistFieldOfResearch in scientistFieldsOfResearches)
+            {
+                if (scientistFieldOfResearch.ANZSRC.ToString().Length == 2)
+                    parsedMajorFieldsOfResearch.Add(scientistFieldOfResearch);
+                else
+                    parsedSubFieldsOfResearch.Add(scientistFieldOfResearch);
+            }
+
+            var existingFieldOfResearch = new FieldOfResearch();
+            var listOfScientistFieldOfResearch = new List<ScientistFieldOfResearch>();
+
+            foreach (var parsedMajorFieldOfResearch in parsedMajorFieldsOfResearch)
+            {
+                existingFieldOfResearch = fieldsOfResearches.FirstOrDefault(existingFieldOfResearch =>
+                    existingFieldOfResearch.ANZSRC == parsedMajorFieldOfResearch.ANZSRC);
+                if (existingFieldOfResearch != null)
+                {
+                    var missingChildFieldsOfResearch = parsedMajorFieldOfResearch.ChildFieldsOfResearch.Where(
+                        parsedChildFieldOfResearch => !existingFieldOfResearch.ChildFieldsOfResearch.Any(
+                            existingChildFieldOfResearch =>
+                                existingChildFieldOfResearch.ANZSRC == parsedChildFieldOfResearch.ANZSRC));
+                    existingFieldOfResearch.ChildFieldsOfResearch = missingChildFieldsOfResearch;
+                }
+
+                parsedMajorFieldOfResearch.ChildFieldsOfResearch = parsedSubFieldsOfResearch.Where(fieldOfResearch =>
+                    fieldOfResearch.ANZSRC.ToString()[..2].Equals(parsedMajorFieldOfResearch.ANZSRC.ToString()));
+
+                // need get Id FieldOfResearch
+                var newScientistFieldOfResearch = new ScientistFieldOfResearch()
+                {
+                    FieldOfResearchId = parsedMajorFieldOfResearch.Id,
+                    ScientistId = scientist.Id
+                };
+                listOfScientistFieldOfResearch.Add(newScientistFieldOfResearch);
+            }
+            // await _fieldOfResearchRepository.UpdateAsync(existingFieldOfResearch);
+            await _scientistFieldOfResearchRepository.UpdateAsync(listOfScientistFieldOfResearch);
+        }
+
+        private async Task CheckAndClickElement(string a, Func<string, By> findBy)
+        {
+            do
+            {
+                try
+                {
+                    _driver.FindElement(findBy(a)).Click();
+                    return;
+                }
+                catch (OpenQA.Selenium.NoSuchElementException e)
+                {
+                    await Task.Delay(2000);
+                }
+            }
+            while (true);
+
 
         }
 
@@ -144,5 +200,6 @@ namespace BLL.Parsers
 
             return response.Translations.ElementAt(0).TranslatedText;
         }
+
     }
 }

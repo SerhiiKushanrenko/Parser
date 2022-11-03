@@ -50,15 +50,15 @@ namespace DAL.EF
                 .WithMany(g => g.Scientists)
                 .HasForeignKey(s => s.OrganizationId);
 
-            modelBuilder.Entity<ScientistFieldOfResearch>()
-                .HasMany(s => s.ScientistsFieldsOfResearch)
-                .WithOne(g => g.FieldOfResearch)
-                .HasForeignKey(s => s.FieldOfResearchId);
+            //modelBuilder.Entity<ScientistFieldOfResearch>()
+            //    .HasMany(s => s.ScientistsFieldsOfResearch)
+            //    .WithOne(g => g.FieldOfResearch)
+            //    .HasForeignKey(s => s.FieldOfResearchId);
 
-            modelBuilder.Entity<ScientistFieldOfResearch>()
-                .HasOne(s => s.ParentFieldOfResearch)
-                .WithMany(g => g.ChildFieldsOfResearch)
-                .HasForeignKey(s => s.ParentFieldOfResearchId);
+            //modelBuilder.Entity<ScientistFieldOfResearch>()
+            //    .HasOne(s => s.ParentFieldOfResearch)
+            //    .WithMany(g => g.ChildFieldsOfResearch)
+            //    .HasForeignKey(s => s.ParentFieldOfResearchId);
 
             modelBuilder.Entity<ScientistFieldOfResearch>()
                 .HasOne(s => s.Scientist)
