@@ -101,7 +101,6 @@ namespace BLL.Parsers
                 {
                     await _scientistSocialNetworkRepository.UpdateAsync(newSSN);
                 }
-
             }
         }
 
