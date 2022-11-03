@@ -25,6 +25,8 @@ namespace BLL.Parsers
         private const string ViewProfileScientist = "//div[contains(@class,'sc-11v30f2-4 gwEvAC')]//a";
         private const string GetListOfResearch = "//*[@id=\"mainContentBlock\"]/div/article[1]/div/section[1]/div/ol/li";
         private const string FindOrcidUrl = "//aside//a[1]";
+        private const string ListOfWork =
+            "//div[contains(@class,'mathjax resultList resultList--publications')]//a/span";
 
         private const int MajorFieldOfResearchLength = 2;
         private const int MinorSearch = 4;
@@ -150,11 +152,11 @@ namespace BLL.Parsers
                         parsedChildFieldOfResearch => !existingFieldOfResearch.ChildFieldsOfResearch.Any(
                             existingChildFieldOfResearch =>
                                 existingChildFieldOfResearch.ANZSRC == parsedChildFieldOfResearch.ANZSRC));
-                    existingFieldOfResearch.ChildFieldsOfResearch = missingChildFieldsOfResearch;
+                    existingFieldOfResearch.ChildFieldsOfResearch = missingChildFieldsOfResearch.ToList();
                 }
 
                 parsedMajorFieldOfResearch.ChildFieldsOfResearch = parsedSubFieldsOfResearch.Where(fieldOfResearch =>
-                    fieldOfResearch.ANZSRC.ToString()[..2].Equals(parsedMajorFieldOfResearch.ANZSRC.ToString()));
+                    fieldOfResearch.ANZSRC.ToString()[..2].Equals(parsedMajorFieldOfResearch.ANZSRC.ToString())).ToList();
 
 
                 var newScientistFieldOfResearch = new ScientistFieldOfResearch()
