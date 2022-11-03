@@ -97,7 +97,11 @@ namespace BLL.Parsers
                     Type = SocialNetworkType.ORCID,
                     SocialNetworkScientistId = orcidUrl.GetScientistSocialNetworkAccountId(SocialNetworkType.ORCID)
                 };
-                await _scientistSocialNetworkRepository.UpdateAsync(newSSN);
+                if (!_scientistSocialNetworkRepository.GetAll().Any(e => e.Url.Equals(newSSN.Url)))
+                {
+                    await _scientistSocialNetworkRepository.UpdateAsync(newSSN);
+                }
+
             }
         }
 
@@ -156,8 +160,8 @@ namespace BLL.Parsers
                 // need get Id FieldOfResearch
                 var newScientistFieldOfResearch = new ScientistFieldOfResearch()
                 {
-                    FieldOfResearchId = parsedMajorFieldOfResearch.Id,
-                    ScientistId = scientist.Id
+                    FieldOfResearch = parsedMajorFieldOfResearch,
+                    Scientist = scientist
                 };
                 listOfScientistFieldOfResearch.Add(newScientistFieldOfResearch);
             }
