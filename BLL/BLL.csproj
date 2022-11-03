@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Google.Cloud.Translate.V3" Version="3.0.0" />
     <PackageReference Include="Selenium.WebDriver" Version="4.5.1" />
   </ItemGroup>
 

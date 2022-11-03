@@ -21,6 +21,7 @@ namespace BLL.Parsers
         private readonly IOrganizationRepository _organizationRepository;
         private readonly ISocialNetworkService _socialNetworkService;
         private readonly IScientistSocialNetworkRepository _scientistSocialNetworkRepository;
+        private readonly IParserDimensions _parserDimensions;
 
         //bibliometrics - we are going to take scientist names + social networks
         private const string NbuviapURL = @"http://nbuviap.gov.ua/bpnu/index.php?page=search";
@@ -40,7 +41,8 @@ namespace BLL.Parsers
             IScientistFieldOfResearchRepository scientistFieldOfResearchRepository,
             IOrganizationRepository organizationRepository,
             ISocialNetworkService socialNetworkService,
-            IScientistSocialNetworkRepository scientistSocialNetworkRepository)
+            IScientistSocialNetworkRepository scientistSocialNetworkRepository,
+            IParserDimensions parserDimensions)
         {
             _supportParser = supportParser;
             _ratingService = ratingService;
@@ -51,6 +53,7 @@ namespace BLL.Parsers
             _organizationRepository = organizationRepository;
             _socialNetworkService = socialNetworkService;
             _scientistSocialNetworkRepository = scientistSocialNetworkRepository;
+            _parserDimensions = parserDimensions;
         }
 
         /// <summary>
@@ -59,10 +62,11 @@ namespace BLL.Parsers
         /// <returns></returns>
         public async Task StartParsing()
         {
-            await ParseNameSocialNetworkFieldOfSearch();
+            //  await ParseNameSocialNetworkFieldOfSearch();
 
+            await _parserDimensions.StartParse();
             //-source is not working
-            await _supportParser.AddListOfWorkAndDegree();
+            //  await _supportParser.AddListOfWorkAndDegree();
 
             #region parse dimensions https: //app.dimensions.ai/ ( Fields of Research | Concepts | Orcid social network)
 
@@ -175,7 +179,7 @@ namespace BLL.Parsers
                         new ScientistFieldOfResearch()
                         {
                             FieldOfResearchId = fieldOfResearchId
-                        } 
+                        }
                     }
                 };
                 var foundResult = await _scientistRepository.GetAsync(scientist.Name);

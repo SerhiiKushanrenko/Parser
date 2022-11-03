@@ -106,6 +106,10 @@ namespace BLL.Helpers
 
         }
 
+        public static string GetSecondName(string scinetistName)
+        {
+            return scinetistName.Split()[0];
+        }
         public static string GetScientistSocialNetworkAccountId(this string socialNetworkUrl, SocialNetworkType socialNetworkType)
         {
             return socialNetworkType switch

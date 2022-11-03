@@ -21,6 +21,7 @@ namespace BLL
             services.AddScoped<IMainParser, MainParser>();
             services.AddScoped<ISupportParser, SupportParser>();
             services.AddScoped<IRatingService, RatingService>();
+            services.AddScoped<IParserDimensions, ParserDimensions>();
             services.AddScoped<ISocialNetworkService, SocialNetworkService>();
             services.AddScoped<IWebDriver, ChromeDriver>();
         }
