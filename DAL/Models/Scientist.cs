@@ -13,6 +13,7 @@
         public ICollection<ScientistFieldOfResearch> ScientistFieldsOfResearch { get; set; }
         public ICollection<ScientistWork> ScientistsWorks { get; set; }
 
+        public ICollection<Concept> Concepts { get; set; }
         public ICollection<ScientistSocialNetwork> ScientistSocialNetworks { get; set; }
 
     }
