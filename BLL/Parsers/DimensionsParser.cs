@@ -10,7 +10,7 @@ using OpenQA.Selenium;
 
 namespace BLL.Parsers
 {
-    public class ParserDimensions : IParserDimensions
+    public class DimensionsParser : IParserDimensions
     {
         private readonly IConceptRepository _conceptRepository;
         private readonly IFieldOfResearchRepository _fieldOfResearchRepository;
@@ -44,7 +44,7 @@ namespace BLL.Parsers
 
 
         private const string DimensionsUrl = @"https://app.dimensions.ai/discover/publication";
-        public ParserDimensions(
+        public DimensionsParser(
             IScientistRepository scientistRepository,
             IWebDriver driver,
             IFieldOfResearchRepository fieldOfResearchRepository,
