@@ -37,6 +37,7 @@ namespace DAL
 
             services.AddScoped(typeof(IOrganizationRepository), typeof(OrganizationRepository));
 
+            services.AddScoped(typeof(IConceptRepository), typeof(ConceptRepository));
         }
     }
 }

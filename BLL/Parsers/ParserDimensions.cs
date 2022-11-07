@@ -12,6 +12,7 @@ namespace BLL.Parsers
 {
     public class ParserDimensions : IParserDimensions
     {
+        private readonly IConceptRepository _conceptRepository;
         private readonly IFieldOfResearchRepository _fieldOfResearchRepository;
         private readonly IScientistRepository _scientistRepository;
         private readonly IScientistFieldOfResearchRepository _scientistFieldOfResearchRepository;
@@ -32,6 +33,8 @@ namespace BLL.Parsers
         private const string GetMoreWorksForScientis = "//*[@id=\"mainContentBlock\"]//section[1]/button";
         private const string CountOfWork = "//*[@id=\"mainContentBlock\"]/div/div[4]/section[1]/div[1]/h3";
 
+        private const string GetListOfConcepts =
+            "//*[@id=\"mainContentBlock\"]//article[1]//section[2]//li[contains(@class,'showmore__item')]";
         private const string YearOfWorks =
             "//div[contains(@class,'mathjax resultList resultList--publications')]//div[contains(@class,'sc-grBbyg sc-czurPZ dsDwVN foTLaS')]";
 
@@ -48,7 +51,8 @@ namespace BLL.Parsers
             IScientistFieldOfResearchRepository scientistFieldOfResearchRepository,
             IScientistSocialNetworkRepository scientistSocialNetworkRepository,
             IScientistWorkRepository scientistWorkRepository,
-            IWorkRepository workRepository)
+            IWorkRepository workRepository,
+            IConceptRepository conceptRepository)
         {
             _scientistRepository = scientistRepository;
             _driver = driver;
@@ -57,6 +61,7 @@ namespace BLL.Parsers
             _scientistSocialNetworkRepository = scientistSocialNetworkRepository;
             _scientistWorkRepository = scientistWorkRepository;
             _workRepository = workRepository;
+            _conceptRepository = conceptRepository;
         }
 
         public async Task StartParse()
@@ -89,6 +94,8 @@ namespace BLL.Parsers
 
                 await AddScientistWork(scientist);
 
+                await AddConsepts(scientist);
+
                 await Task.Delay(3500);
 
                 var listOfFieldsOfResearch = _driver
@@ -102,6 +109,36 @@ namespace BLL.Parsers
             await _scientistRepository.UpdateAsync(scientists);
             _driver.Quit();
 
+        }
+
+        private async Task AddConsepts(Scientist scientist)
+        {
+            var parseListOfConcept = new List<string>();
+            var listOfConcept = new List<Concept>();
+            do
+            {
+                try
+                {
+                    parseListOfConcept = _driver.FindElements(By.XPath(GetListOfConcepts)).Select(e => e.Text).ToList();
+                    break;
+                }
+                catch (OpenQA.Selenium.NoSuchElementException e)
+                {
+                    await Task.Delay(2000);
+                }
+            }
+            while (true);
+
+            foreach (var concept in parseListOfConcept)
+            {
+                var newConcept = new Concept()
+                {
+                    Name = concept,
+                    Scientist = scientist
+                };
+                listOfConcept.Add(newConcept);
+            }
+            await _conceptRepository.UpdateAsync(listOfConcept);
         }
 
         private async Task AddScientistWork(Scientist scientist)

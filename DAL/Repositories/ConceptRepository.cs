@@ -5,9 +5,9 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DAL.Repositories
 {
-    public class OrganizationRepository : Repository<Organization>, IRepository<Organization>, IOrganizationRepository
+    public class ConceptRepository : Repository<Concept>, IRepository<Concept>, IConceptRepository
     {
-        public OrganizationRepository(ParserDbContext dbContext) : base(dbContext)
+        public ConceptRepository(ParserDbContext dbContext) : base(dbContext)
         {
         }
 
@@ -16,13 +16,13 @@ namespace DAL.Repositories
             return await GetAll().CountAsync();
         }
 
-        public async Task<Organization> GetAsync(int id)
+        public async Task<Concept> GetAsync(int id)
         {
-            return await GetAll().FirstOrDefaultAsync(organization => organization.Id == id);
+            return await GetAll().FirstOrDefaultAsync(concept => concept.Id == id);
         }
-        public async Task<Organization> GetAsync(string name)
+        public async Task<Concept> GetAsync(string name)
         {
-            return await GetAll().FirstOrDefaultAsync(organization => organization.Name.Equals(name));
+            return await GetAll().FirstOrDefaultAsync(concept => concept.Name.Equals(name));
         }
 
         //public async Task<List<Organization>> GetFieldsOfResearchAsync(FieldOfResearchFilter? filter = null)

@@ -19,7 +19,7 @@ namespace DAL.Repositories
 
         public async Task<ScientistFieldOfResearch> GetAsync(int id)
         {
-            return await GetAll().FirstOrDefaultAsync(direction => direction.Id == id);
+            return await GetAll().FirstOrDefaultAsync(fieldOfResearch => fieldOfResearch.Id == id);
         }
 
         public async Task<List<ScientistFieldOfResearch>> GetScientistsFieldsOfResearchAsync(ScientistFieldOfResearchFilter? filter = null)

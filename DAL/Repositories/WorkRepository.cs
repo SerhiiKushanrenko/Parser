@@ -18,11 +18,11 @@ namespace DAL.Repositories
 
         public async Task<Work> GetAsync(int id)
         {
-            return await GetAll().FirstOrDefaultAsync(direction => direction.Id == id);
+            return await GetAll().FirstOrDefaultAsync(work => work.Id == id);
         }
         public async Task<Work> GetAsync(string name)
         {
-            return await GetAll().FirstOrDefaultAsync(direction => direction.Name.Equals(name));
+            return await GetAll().FirstOrDefaultAsync(work => work.Name.Equals(name));
         }
 
         //public async Task<List<Work>> GetFieldsOfResearchAsync(FieldOfResearchFilter? filter = null)
