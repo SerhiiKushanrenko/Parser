@@ -16,6 +16,8 @@ namespace BLL.Parsers
         private readonly IScientistRepository _scientistRepository;
         private readonly IScientistFieldOfResearchRepository _scientistFieldOfResearchRepository;
         private readonly IScientistSocialNetworkRepository _scientistSocialNetworkRepository;
+        private readonly IScientistWorkRepository _scientistWorkRepository;
+        private readonly IWorkRepository _workRepository;
         private readonly IWebDriver _driver;
 
         private const string SetInputOfSearch = "//div[contains(@class,'sc-jccYHG ghibKI')]/textarea";
@@ -27,19 +29,34 @@ namespace BLL.Parsers
         private const string FindOrcidUrl = "//aside//a[1]";
         private const string ListOfWork =
             "//div[contains(@class,'mathjax resultList resultList--publications')]//a/span";
+        private const string GetMoreWorksForScientis = "//*[@id=\"mainContentBlock\"]//section[1]/button";
+        private const string CountOfWork = "//*[@id=\"mainContentBlock\"]/div/div[4]/section[1]/div[1]/h3";
+
+        private const string YearOfWorks =
+            "//div[contains(@class,'mathjax resultList resultList--publications')]//div[contains(@class,'sc-grBbyg sc-czurPZ dsDwVN foTLaS')]";
+
 
         private const int MajorFieldOfResearchLength = 2;
         private const int MinorSearch = 4;
 
 
         private const string DimensionsUrl = @"https://app.dimensions.ai/discover/publication";
-        public ParserDimensions(IScientistRepository scientistRepository, IWebDriver driver, IFieldOfResearchRepository fieldOfResearchRepository, IScientistFieldOfResearchRepository scientistFieldOfResearchRepository, IScientistSocialNetworkRepository scientistSocialNetworkRepository)
+        public ParserDimensions(
+            IScientistRepository scientistRepository,
+            IWebDriver driver,
+            IFieldOfResearchRepository fieldOfResearchRepository,
+            IScientistFieldOfResearchRepository scientistFieldOfResearchRepository,
+            IScientistSocialNetworkRepository scientistSocialNetworkRepository,
+            IScientistWorkRepository scientistWorkRepository,
+            IWorkRepository workRepository)
         {
             _scientistRepository = scientistRepository;
             _driver = driver;
             _fieldOfResearchRepository = fieldOfResearchRepository;
             _scientistFieldOfResearchRepository = scientistFieldOfResearchRepository;
             _scientistSocialNetworkRepository = scientistSocialNetworkRepository;
+            _scientistWorkRepository = scientistWorkRepository;
+            _workRepository = workRepository;
         }
 
         public async Task StartParse()
@@ -70,6 +87,8 @@ namespace BLL.Parsers
 
                 await AddOrcidSocialNetwork(scientist);
 
+                await AddScientistWork(scientist);
+
                 await Task.Delay(3500);
 
                 var listOfFieldsOfResearch = _driver
@@ -85,6 +104,66 @@ namespace BLL.Parsers
 
         }
 
+        private async Task AddScientistWork(Scientist scientist)
+        {
+            await Task.Delay(2500);
+            var stringCountOfWork = await GetStringCountOfWork(CountOfWork, By.XPath);
+            var countWork = StrHelper.GetCountWork(stringCountOfWork);
+
+            var parseWorks = new List<string>();
+
+            var listOfWork = new List<Work>();
+
+            var listOfScientistWork = new List<ScientistWork>();
+
+            var listOfYearWork = new List<string>();
+
+            while (countWork > parseWorks.Count)
+            {
+                try
+                {
+                    if (_driver.FindElement(By.XPath(GetMoreWorksForScientis)).Displayed)
+                    {
+                        parseWorks = _driver.FindElements(By.XPath(ListOfWork)).Select(e => e.Text).ToList();
+                        listOfYearWork = _driver.FindElements(By.XPath(YearOfWorks)).Select(e => e.Text).ToList();
+                        parseWorks = StrHelper.FindEmptyString(parseWorks);
+                        _driver.FindElement(By.XPath(GetMoreWorksForScientis)).Click();
+                        await Task.Delay(3500);
+                    }
+                }
+                catch (OpenQA.Selenium.NoSuchElementException e)
+                {
+                    break;
+                }
+            }
+
+            listOfYearWork = StrHelper.GetOnlyYear(listOfYearWork);
+
+            for (var i = 0; i < parseWorks.Count; i++)
+            {
+                var newWork = new Work()
+                {
+                    Name = parseWorks[i],
+                    Year = int.Parse(listOfYearWork[i])
+                };
+
+                listOfWork.Add(newWork);
+            }
+
+            foreach (var work in listOfWork)
+            {
+                var newScientistWork = new ScientistWork()
+                {
+                    Scientist = scientist,
+                    Work = work
+                };
+                listOfScientistWork.Add(newScientistWork);
+            }
+
+            await _workRepository.UpdateAsync(listOfWork);
+
+            await _scientistWorkRepository.UpdateAsync(listOfScientistWork);
+        }
 
         private async Task AddOrcidSocialNetwork(Scientist scientist)
         {
@@ -187,6 +266,23 @@ namespace BLL.Parsers
             while (true);
 
 
+        }
+
+        private async Task<string> GetStringCountOfWork(string a, Func<string, By> findBy)
+        {
+            do
+            {
+                try
+                {
+                    var result = _driver.FindElement(findBy(a)).Text;
+                    return result;
+                }
+                catch (OpenQA.Selenium.NoSuchElementException e)
+                {
+                    await Task.Delay(2000);
+                }
+            }
+            while (true);
         }
 
         private static string TranslateToEnglish(Scientist scientist)
