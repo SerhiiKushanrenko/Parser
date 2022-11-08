@@ -7,8 +7,9 @@ namespace DAL.Repositories.Interfaces
     {
         Task<int> GetCountAsync();
         Task<ScientistWork> GetAsync(int id);
-
         bool CheckScientistWorkAsync(ScientistWorkFilter? filter = null);
-        Task<List<ScientistWork>> GetScientistsFieldsOfResearchAsync(ScientistWorkFilter? filter = null);
+
+        public Task<List<ScientistWork>> GetScientistWorkAsync(ScientistWorkFilter? filter = null);
+
     }
 }

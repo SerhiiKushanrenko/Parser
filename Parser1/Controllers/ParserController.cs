@@ -21,7 +21,7 @@ namespace Parser.Controllers
         }
 
 
-        [HttpGet("Parser")]
+        [HttpGet("StartParser")]
         public async Task<IActionResult> StartMainParser()
         {
             await _mainParser.StartParsing();
@@ -32,24 +32,13 @@ namespace Parser.Controllers
         /// Get and Check all Direction
         /// </summary>
         /// <returns></returns>
-        //[HttpGet("GetDirection")]
-        //public IActionResult GetAllDirection()
-        //{
-        //    var directions = _mainParser.GetDirection();
-
-        //    return Ok(directions);
-        //}
-
-        /// <summary>
-        /// Search scientist to work
-        /// </summary>
-        /// <param name="generalWork"></param>
-        /// <returns></returns>
-        [HttpGet("ParserWork")]
-        public IActionResult ParserOnlyWork(string direction)
+        [HttpGet("GetDirection")]
+        public IActionResult GetAllDirection()
         {
-            _supportParser.AddWorkToScientists(direction);
-            return Ok();
+            var directions = _mainParser.GetDirection();
+
+            return Ok(directions);
         }
+
     }
 }

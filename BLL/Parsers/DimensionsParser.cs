@@ -92,9 +92,9 @@ namespace BLL.Parsers
 
                 await AddOrcidSocialNetwork(scientist);
 
-                await AddScientistWork(scientist);
-
                 await AddConsepts(scientist);
+
+                await AddScientistWork(scientist);
 
                 await Task.Delay(3500);
 
@@ -301,7 +301,6 @@ namespace BLL.Parsers
                 }
             }
             while (true);
-
 
         }
 

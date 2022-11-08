@@ -1,7 +1,10 @@
 using BLL.Interfaces;
 using BLL.Parsers.Interfaces;
+using DAL.AdditionalModels;
 using DAL.Models;
+using DAL.Repositories.Interfaces;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 
 namespace Parser.Controllers
@@ -10,35 +13,46 @@ namespace Parser.Controllers
     [Route("[controller]")]
     public class ScientistController : ControllerBase
     {
-
+        private readonly IWorkRepository _workRepository;
+        private readonly IScientistWorkRepository _scientistWorkRepository;
         private readonly IMainParser _mainParser;
         private readonly ISupportParser _supportParser;
-        public ScientistController(IMainParser mainParser, ISupportParser supportParser)
+        private readonly IScientistRepository _scientistRepository;
+        private readonly IFieldOfResearchRepository _fieldOfResearchRepository;
+        private readonly IScientistFieldOfResearchRepository _scientistFieldOfResearchRepository;
+
+        public ScientistController(
+            IMainParser mainParser,
+            ISupportParser supportParser,
+            IScientistRepository scientistRepository,
+            IFieldOfResearchRepository fieldOfResearchRepository,
+            IScientistFieldOfResearchRepository scientistFieldOfResearchRepository,
+            IScientistWorkRepository scientistWorkRepository,
+            IWorkRepository workRepository
+        )
         {
 
             _mainParser = mainParser;
             _supportParser = supportParser;
+            _scientistRepository = scientistRepository;
+            _fieldOfResearchRepository = fieldOfResearchRepository;
+            _scientistFieldOfResearchRepository = scientistFieldOfResearchRepository;
+            _scientistWorkRepository = scientistWorkRepository;
+            _workRepository = workRepository;
+
         }
 
         /// <summary>
-        /// Parser scientists for random direction
+        /// Parser scientists for random fieldOfResearch
         /// </summary>
         /// <param name="id"></param>
         /// <returns></returns>
         [HttpGet("{id}")]
         public async Task<IActionResult> Get(int id)
         {
-            //var user = await _context.Scientists.FindAsync(id);
+            var user = await _scientistRepository.GetAsync(id);
 
-            //if (user is null)
-            //{
-            //    return Ok($"Юзера с ID{id} нет в БД");
-
-            //    //_mainParser.ParseGeneralInfo();
-            //    //Thread.Sleep(2000);
-            //    //return Ok();
-            //}
-            return Ok();
+            return user is null ? Ok($"Юзера с ID{id} нет в БД") : Ok(user);
         }
 
         /// <summary>
@@ -48,71 +62,42 @@ namespace Parser.Controllers
         [HttpGet]
         public async Task<ActionResult<IEnumerable<Scientist>>> GetAll()
         {
-            //var scientists = await _context.Scientists.Take(500).AsNoTracking().ToListAsync();
-            //return Ok(scientists);
-            return Ok();
+            var scientists = await _scientistRepository.GetAll().AsNoTracking().ToListAsync();
+            return Ok(scientists);
+
         }
 
-        /// <summary>
-        /// Get Scientists From To Order 
-        /// </summary>
-        /// <param name="haveToGet"></param>
-        /// <param name="haveToSkip"></param>
-        /// <returns></returns>
-        [HttpGet("GetFromOrder")]
-        public IActionResult GetFromOrder(int haveToGet, int haveToSkip)
+
+        [HttpGet("GetAllFromDirection")]
+        public async Task<IActionResult> GetAllFromDirection(string fieldOfResearch)
         {
-            //var result = _context.Scientists.Skip(haveToSkip).Take(haveToGet).ToList();
-            //return result.Any() ? Ok(result) : Ok("Стільки вчених немає");
-            return Ok();
-        }
 
-        [HttpGet("GetScientistFromWork")]
-        public IActionResult GetScientistFromWork(string generalWork)
-        {
-            return Ok();
-            //try
-            //{
-            //    var workOfScientistId = _context.Works.FirstOrDefault(e => e.Name.Equals(generalWork))!.Id;
-            //    var scientists = _context.ScientistsWork.Where(e => e.WorkId == workOfScientistId).Select(q => q.Scientist).ToList();
-            //    return Ok(scientists);
-            //}
-            //catch (System.NullReferenceException e)
-            //{
-            //    var a = $"{e.Message} такой работы нет ";
-            //    return Ok(a);
-            //}
+            try
+            {
+                var currentDirection = await _fieldOfResearchRepository.GetAsync(fieldOfResearch);
+                var result = await _scientistFieldOfResearchRepository.GetScientistsFieldsOfResearchAsync(new ScientistFieldOfResearchFilter() { FieldOfResearchId = currentDirection.Id });
+                return Ok(result);
+            }
+            catch (Exception e)
+            {
+                var a = "такого направления нет";
+                return Ok(a);
+            }
         }
-
-        //[HttpGet("GetAllFromDirection")]
-        //public async Task<IActionResult> GetAllFromDirection(string direction)
-        //{
-        //    // проверка на обновление бд на сайте
-        //    // mainParser.CheckOnEquals(direction);
-        //    try
-        //    {
-        //        var directionId = _context.Directions.FirstOrDefault(e => e.Name.Equals(direction))!.Id;
-        //        var scientists = await _context.Scientists.Where(e => e.DirectionId == directionId).Take(30).ToListAsync();
-        //        return Ok(scientists);
-        //    }
-        //    catch (Exception e)
-        //    {
-        //        var a = $"{e.Message} такого направления нет ";
-        //        return Ok(a);
-        //    }
-        //}
 
         /// <summary>
         /// Get Scientists for Organization
         /// </summary>
         /// <param name="organization"></param>
         /// <returns></returns>
-        [HttpGet("GetAllFromOrganization")]
-        public IActionResult GetAllFromOrganization(string organization)
+        [HttpGet("GetAllFromWork")]
+        public IActionResult GetAllFromWork(string work)
         {
             try
             {
-                // List<Scientist> scientists = _context.Scientists.Where(e => e.Organization == organization).ToList();
+                var currentWork = _workRepository.GetAsync(work);
+                var result = _scientistWorkRepository.GetScientistWorkAsync(new ScientistWorkFilter()
+                { WorkId = currentWork.Id });
                 return Ok();
             }
             catch (Exception e)

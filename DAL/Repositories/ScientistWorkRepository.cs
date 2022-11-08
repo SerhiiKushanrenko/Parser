@@ -6,7 +6,8 @@ using Microsoft.EntityFrameworkCore;
 
 namespace DAL.Repositories
 {
-    public class ScientistWorkRepository : Repository<ScientistWork>, IRepository<ScientistWork>, IScientistWorkRepository
+    public class ScientistWorkRepository : Repository<ScientistWork>, IRepository<ScientistWork>,
+                                           IScientistWorkRepository
     {
         public ScientistWorkRepository(ParserDbContext dbContext) : base(dbContext)
         {
@@ -22,24 +23,23 @@ namespace DAL.Repositories
             return await GetAll().FirstOrDefaultAsync(direction => direction.Id == id);
         }
 
-        public async Task<List<ScientistWork>> GetScientistsFieldsOfResearchAsync(ScientistWorkFilter? filter = null)
-        {
-            return new List<ScientistWork>();
-
-            //return await GetAll().Where(scientistFieldOfResearch => filter == null || 
-            //(!filter.ScientistId.HasValue || (filter.ScientistId == scientistFieldOfResearch.ScientistId)) &&
-            //(!filter.FieldOfResearchId.HasValue || (filter.FieldOfResearchId == scientistFieldOfResearch.FieldOfResearchId))
-            //).ToListAsync();
-        }
 
         public bool CheckScientistWorkAsync(ScientistWorkFilter? filter = null)
         {
-            ////_context.ScientistsWork.Any(e =>
-            //e.ScientistId.Equals(scientistFromDb.Id) &
-            //    e.WorkId.Equals(workScientistFromDb.Id)))
-
             return GetAll().Any(e => e.ScientistId.Equals(filter.ScientistId) & e.WorkId.Equals(filter.WorkId));
 
+        }
+
+        public async Task<List<ScientistWork>> GetScientistWorkAsync(ScientistWorkFilter? filter = null)
+        {
+            return await GetAll()
+                .Where(scientistFieldOfResearch => filter == null ||
+                                                   (!filter.ScientistId.HasValue || (filter.ScientistId ==
+                                                       scientistFieldOfResearch.ScientistId)) &&
+                                                   (!filter.WorkId.HasValue ||
+                                                    (filter.WorkId == scientistFieldOfResearch.WorkId))
+                )
+                .ToListAsync();
         }
     }
 }

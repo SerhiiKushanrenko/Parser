@@ -25,13 +25,6 @@ namespace DAL.Repositories
             return await GetAll().FirstOrDefaultAsync(work => work.Name.Equals(name));
         }
 
-        //public async Task<List<Work>> GetFieldsOfResearchAsync(FieldOfResearchFilter? filter = null)
-        //{
-        //    return new List<Work>();
 
-        //    //return await GetAll().Where(direction => filter == null ||
-        //    //(string.IsNullOrEmpty(filter.Title) || (filter.Title.Contains(direction.Title) || direction.Title.Contains(filter.Title)))
-        //    //).ToListAsync();
-        //}
     }
 }
