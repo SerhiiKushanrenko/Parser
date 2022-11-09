@@ -1,5 +1,6 @@
 ﻿using DAL.EF;
 using DAL.Repositories.Interfaces;
+using Microsoft.EntityFrameworkCore;
 
 namespace DAL.Repositories
 {
@@ -15,6 +16,11 @@ namespace DAL.Repositories
         public IQueryable<EntType> GetAll()
         {
             return _context.Set<EntType>().AsQueryable();
+        }
+
+        protected IQueryable<EntType> GetAllWithIgnore()
+        {
+            return _context.Set<EntType>().IgnoreAutoIncludes().AsQueryable();
         }
 
         public Task<int> CreateAsync(EntType entity)

@@ -69,13 +69,16 @@ namespace Parser.Controllers
 
 
         [HttpGet("GetAllFromDirection")]
-        public async Task<IActionResult> GetAllFromDirection(string fieldOfResearch)
+        public async Task<ActionResult<IEnumerable<Scientist>>> GetAllFromDirection(string fieldOfResearch)
         {
 
             try
             {
                 var currentDirection = await _fieldOfResearchRepository.GetAsync(fieldOfResearch);
-                var result = await _scientistFieldOfResearchRepository.GetScientistsFieldsOfResearchAsync(new ScientistFieldOfResearchFilter() { FieldOfResearchId = currentDirection.Id });
+                var getScientistFieldOfResearches = await _scientistFieldOfResearchRepository.GetScientistsFieldsOfResearchAsync(new ScientistFieldOfResearchFilter() { FieldOfResearchId = currentDirection.Id });
+                var result = await _scientistRepository.GetAllFromFieldOfResearch(getScientistFieldOfResearches);
+
+
                 return Ok(result);
             }
             catch (Exception e)
@@ -91,18 +94,19 @@ namespace Parser.Controllers
         /// <param name="organization"></param>
         /// <returns></returns>
         [HttpGet("GetAllFromWork")]
-        public IActionResult GetAllFromWork(string work)
+        public async Task<ActionResult<IEnumerable<Scientist>>> GetAllFromWork(string work)
         {
             try
             {
-                var currentWork = _workRepository.GetAsync(work);
-                var result = _scientistWorkRepository.GetScientistWorkAsync(new ScientistWorkFilter()
+                var currentWork = await _workRepository.GetAsync(work);
+                var getScientistWork = await _scientistWorkRepository.GetScientistWorkAsync(new ScientistWorkFilter()
                 { WorkId = currentWork.Id });
-                return Ok();
+                var result = await _scientistRepository.GetAllFromWork(getScientistWork);
+                return Ok(result);
             }
             catch (Exception e)
             {
-                var a = $"{e.Message} такого направлени€ нет ";
+                var a = "“акой работы нет";
                 return Ok(a);
             }
         }
