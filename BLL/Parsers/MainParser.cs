@@ -62,7 +62,7 @@ namespace BLL.Parsers
         /// <returns></returns>
         public async Task StartParsing()
         {
-            await ParseNameSocialNetworkFieldOfSearch();
+            // await ParseNameSocialNetworkFieldOfSearch();
             await _parserDimensions.StartParse();
             //-source is not working
             //  await _supportParser.AddListOfWorkAndDegree();

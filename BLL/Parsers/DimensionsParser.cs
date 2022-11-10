@@ -90,6 +90,7 @@ namespace BLL.Parsers
                     await CheckAndClickElement(searchElement.Item1, searchElement.Item2);
                 }
 
+
                 //await AddOrcidSocialNetwork(scientist);
                 if (await CheckSearchValidation(scientist))
                 {
@@ -208,10 +209,18 @@ namespace BLL.Parsers
         private async Task<bool> CheckByScopusUrl(Scientist scientist, string scopusUrlFromDimensions)
         {
             var scopusUrl = _scientistSocialNetworkRepository.GetAll()
-                .Where(e => e.ScientistId == scientist.Id)
-                .Select(e => e.Type == SocialNetworkType.Scopus);
+                .Where(e => e.ScientistId == scientist.Id).ToList();
 
-            return scopusUrl.Equals(scopusUrlFromDimensions);
+            foreach (var scientistSocialNetwork in scopusUrl)
+            {
+                if (scientistSocialNetwork.Type == SocialNetworkType.ORCID)
+                {
+                    return scopusUrl.Equals(scopusUrlFromDimensions);
+                }
+            }
+
+            return false;
+
         }
 
         private async Task<bool> CheckSearchValidation(Scientist scientist)
