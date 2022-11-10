@@ -3,6 +3,7 @@ using BLL.Servises.Interfaces;
 using DAL.AdditionalModels;
 using DAL.Models;
 using OpenQA.Selenium;
+using OpenQA.Selenium.Chrome;
 
 namespace BLL.Servises
 {
@@ -27,6 +28,17 @@ namespace BLL.Servises
             {
                 var netWorkUrl = GetSocialUrl(networkData.Xpath);
 
+                if (networkData.NetworkType == SocialNetworkType.Scopus)
+                {
+                    result.Add(new ScientistSocialNetwork()
+                    {
+                        ScientistId = scientist.Id,
+                        Url = GetOrcidUrl(netWorkUrl),
+                        Type = SocialNetworkType.ORCID,
+                        SocialNetworkScientistId = netWorkUrl.GetScientistSocialNetworkAccountId(networkData.NetworkType)
+                    });
+                }
+
                 if (!string.IsNullOrEmpty(netWorkUrl))
                 {
                     result.Add(new ScientistSocialNetwork()
@@ -39,6 +51,19 @@ namespace BLL.Servises
                 }
             }
             scientist.ScientistSocialNetworks = result;
+        }
+
+        private string GetOrcidUrl(string netWorkUrl)
+        {
+            IWebDriver driver = new ChromeDriver();
+            driver.Navigate().GoToUrl(netWorkUrl);
+
+            var scopusUrl = driver
+                .FindElement(By.XPath(
+                    "//ul[contains(@class,'ul--horizontal margin-size-0-t')]//span[contains(@class,'link__text')]"))
+                .Text;
+            driver.Quit();
+            return scopusUrl;
         }
 
         public string GetSocialUrl(string socialNetworkXPath)

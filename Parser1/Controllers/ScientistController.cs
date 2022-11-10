@@ -78,7 +78,6 @@ namespace Parser.Controllers
                 var getScientistFieldOfResearches = await _scientistFieldOfResearchRepository.GetScientistsFieldsOfResearchAsync(new ScientistFieldOfResearchFilter() { FieldOfResearchId = currentDirection.Id });
                 var result = await _scientistRepository.GetAllFromFieldOfResearch(getScientistFieldOfResearches);
 
-
                 return Ok(result);
             }
             catch (Exception e)

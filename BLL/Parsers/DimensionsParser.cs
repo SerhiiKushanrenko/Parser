@@ -90,25 +90,26 @@ namespace BLL.Parsers
                     await CheckAndClickElement(searchElement.Item1, searchElement.Item2);
                 }
 
-                await AddOrcidSocialNetwork(scientist);
+                //await AddOrcidSocialNetwork(scientist);
+                if (await CheckSearchValidation(scientist))
+                {
+                    await AddConsepts(scientist);
 
-                await AddConsepts(scientist);
+                    await AddScientistWork(scientist);
 
-                await AddScientistWork(scientist);
+                    await Task.Delay(3500);
 
-                await Task.Delay(3500);
+                    var listOfFieldsOfResearch = _driver
+                        .FindElements(By.XPath(
+                            GetListOfResearch))
+                        .Select(e => e.Text)
+                        .ToList();
 
-                var listOfFieldsOfResearch = _driver
-                    .FindElements(By.XPath(
-                        GetListOfResearch))
-                    .Select(e => e.Text)
-                    .ToList();
-
-                await CreateScientistFieldOfResearch(listOfFieldsOfResearch, fieldsOfResearches, scientist);
+                    await CreateScientistFieldOfResearch(listOfFieldsOfResearch, fieldsOfResearches, scientist);
+                }
             }
             await _scientistRepository.UpdateAsync(scientists);
             _driver.Quit();
-
         }
 
         private async Task AddConsepts(Scientist scientist)
@@ -202,8 +203,32 @@ namespace BLL.Parsers
             await _scientistWorkRepository.UpdateAsync(listOfScientistWork);
         }
 
+
+
+        private async Task<bool> CheckByScopusUrl(Scientist scientist, string scopusUrlFromDimensions)
+        {
+            var scopusUrl = _scientistSocialNetworkRepository.GetAll()
+                .Where(e => e.ScientistId == scientist.Id)
+                .Select(e => e.Type == SocialNetworkType.Scopus);
+
+            return scopusUrl.Equals(scopusUrlFromDimensions);
+        }
+
+        private async Task<bool> CheckSearchValidation(Scientist scientist)
+        {
+            if (_driver.FindElement(By.XPath(FindOrcidUrl)).Displayed)
+            {
+                var orcidUrl = _driver.FindElement(By.XPath(FindOrcidUrl)).GetAttribute("href");
+
+                return await CheckByScopusUrl(scientist, orcidUrl);
+            }
+            return false;
+        }
+
+
         private async Task AddOrcidSocialNetwork(Scientist scientist)
         {
+
             if (_driver.FindElement(By.XPath(FindOrcidUrl)).Displayed)
             {
                 var orcidUrl = _driver.FindElement(By.XPath(FindOrcidUrl)).GetAttribute("href");
