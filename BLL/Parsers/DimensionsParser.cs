@@ -7,6 +7,8 @@ using Google.Api.Gax.ResourceNames;
 using Google.Cloud.Translate.V3;
 using Microsoft.EntityFrameworkCore;
 using OpenQA.Selenium;
+using Polly;
+using Polly.Retry;
 
 namespace BLL.Parsers
 {
@@ -20,6 +22,8 @@ namespace BLL.Parsers
         private readonly IScientistWorkRepository _scientistWorkRepository;
         private readonly IWorkRepository _workRepository;
         private readonly IWebDriver _driver;
+        private readonly AsyncRetryPolicy _asyncRetryPolicy;
+
 
         private const string SetInputOfSearch = "//div[contains(@class,'sc-jccYHG ghibKI')]/textarea";
         private const string SearchButtomCssSelector = "#header > div.sc-bgzEgf.iEWfss > div > div.sc-eAeVAz.bnxygZ > div > button.sc-187562o-0.ghWmxP.sc-fmixVB.cYiQVv";
@@ -62,6 +66,7 @@ namespace BLL.Parsers
             _scientistWorkRepository = scientistWorkRepository;
             _workRepository = workRepository;
             _conceptRepository = conceptRepository;
+            _asyncRetryPolicy = Policy.Handle<NoSuchElementException>().WaitAndRetryAsync(retryCount: 3, sleepDurationProvider: e => TimeSpan.FromSeconds(2));
         }
 
         public async Task StartParse()
@@ -76,7 +81,7 @@ namespace BLL.Parsers
 
                 _driver.FindElement(By.XPath(SetInputOfSearch)).SendKeys(scientistSecondName);
 
-                List<(string, Func<string, By>)> ListOfSearchElements = new()
+                List<(string, Func<string, By>)> listOfSearchElements = new()
                 {
                     (SearchButtomCssSelector, By.CssSelector),
                     (ResultOfSearchButton, By.XPath),
@@ -85,10 +90,12 @@ namespace BLL.Parsers
                     (ViewProfileScientist, By.XPath)
                 };
 
-                foreach (var searchElement in ListOfSearchElements)
+                foreach (var searchElement in listOfSearchElements)
                 {
-                    await CheckAndClickElement(searchElement.Item1, searchElement.Item2);
+                    // await CheckAndClickElement(searchElement.Item1, searchElement.Item2);
+                    await _asyncRetryPolicy.ExecuteAsync(() => TestPolly(searchElement.Item1, searchElement.Item2));
                 }
+
 
 
                 //await AddOrcidSocialNetwork(scientist);
@@ -318,6 +325,11 @@ namespace BLL.Parsers
             }
             // await _fieldOfResearchRepository.UpdateAsync(existingFieldOfResearch);
             await _scientistFieldOfResearchRepository.UpdateAsync(listOfScientistFieldOfResearch);
+        }
+
+        private async Task TestPolly(string a, Func<string, By> findBy)
+        {
+            _driver.FindElement(findBy(a)).Click();
         }
 
         private async Task CheckAndClickElement(string a, Func<string, By> findBy)
