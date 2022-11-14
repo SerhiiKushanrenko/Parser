@@ -35,7 +35,7 @@ namespace BLL.Parsers
         {
             var listOfScientist = _scientistRepository.GetAll();
             IWebDriver driver = new ChromeDriver();
-            // need test with _driver
+
             driver.Url = URL;
 
             foreach (var scientist in listOfScientist)

@@ -24,7 +24,6 @@ namespace Parser.Services
 
             //table[@id='gsc_rsb_st']//tbody//tr//td[contains(@class, 'gsc_rsb_std')]
         }
-
     }
 }
 
