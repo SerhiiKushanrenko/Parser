@@ -93,7 +93,7 @@ namespace BLL.Parsers
                 foreach (var searchElement in listOfSearchElements)
                 {
                     // await CheckAndClickElement(searchElement.Item1, searchElement.Item2);
-                    await _asyncRetryPolicy.ExecuteAsync(() => TestPolly(searchElement.Item1, searchElement.Item2));
+                    await _asyncRetryPolicy.ExecuteAsync(() => ClickElemen(searchElement.Item1, searchElement.Item2));
                 }
 
 
@@ -327,7 +327,7 @@ namespace BLL.Parsers
             await _scientistFieldOfResearchRepository.UpdateAsync(listOfScientistFieldOfResearch);
         }
 
-        private async Task TestPolly(string a, Func<string, By> findBy)
+        private async Task ClickElemen(string a, Func<string, By> findBy)
         {
             _driver.FindElement(findBy(a)).Click();
         }

@@ -1,5 +1,4 @@
 ﻿using BLL.Helpers;
-using BLL.Interfaces;
 using BLL.Parsers.Interfaces;
 using BLL.Servises.Interfaces;
 using DAL.AdditionalModels;
@@ -15,9 +14,7 @@ namespace BLL.Parsers
         private readonly IWebDriver _driver;
         private readonly IFieldOfResearchRepository _fieldOfResearchRepository;
         private readonly IScientistRepository _scientistRepository;
-        private readonly ISupportParser _supportParser;
         private readonly IRatingService _ratingService;
-        private readonly IScientistFieldOfResearchRepository _scientistFieldOfResearchRepository;
         private readonly IOrganizationRepository _organizationRepository;
         private readonly ISocialNetworkService _socialNetworkService;
         private readonly IScientistSocialNetworkRepository _scientistSocialNetworkRepository;
@@ -33,23 +30,19 @@ namespace BLL.Parsers
         private const string SearchButtonXPath = "//input[@class='btn btn-primary mb-2']";
         private const string NextPageButtonXPath = "//a[contains(.,'>>')]";
         public MainParser(
-            ISupportParser supportParser,
             IRatingService ratingService,
             IWebDriver driver,
             IFieldOfResearchRepository fieldOfResearchRepository,
             IScientistRepository scientistRepository,
-            IScientistFieldOfResearchRepository scientistFieldOfResearchRepository,
             IOrganizationRepository organizationRepository,
             ISocialNetworkService socialNetworkService,
             IScientistSocialNetworkRepository scientistSocialNetworkRepository,
             IParserDimensions parserDimensions)
         {
-            _supportParser = supportParser;
             _ratingService = ratingService;
             _driver = driver;
             _fieldOfResearchRepository = fieldOfResearchRepository;
             _scientistRepository = scientistRepository;
-            _scientistFieldOfResearchRepository = scientistFieldOfResearchRepository;
             _organizationRepository = organizationRepository;
             _socialNetworkService = socialNetworkService;
             _scientistSocialNetworkRepository = scientistSocialNetworkRepository;
@@ -62,7 +55,7 @@ namespace BLL.Parsers
         /// <returns></returns>
         public async Task StartParsing()
         {
-            // await ParseNameSocialNetworkFieldOfSearch();
+            await ParseNameSocialNetworkFieldOfSearch();
             await _parserDimensions.StartParse();
             //-source is not working
             //  await _supportParser.AddListOfWorkAndDegree();
