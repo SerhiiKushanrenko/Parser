@@ -7,9 +7,9 @@ using DAL.Repositories.Interfaces;
 using OpenQA.Selenium;
 using System.Collections.ObjectModel;
 
-namespace BLL.Parsers
+namespace BLL.Services.Strategy
 {
-    public class MainParser : IMainParser
+    public class ParsingOfMissingScientists : IMainParser
     {
         private readonly IWebDriver _driver;
         private readonly IFieldOfResearchRepository _fieldOfResearchRepository;
@@ -29,7 +29,7 @@ namespace BLL.Parsers
         private const string ResearchElementXPath = "//table//tr/td[7]";
         private const string SearchButtonXPath = "//input[@class='btn btn-primary mb-2']";
         private const string NextPageButtonXPath = "//a[contains(.,'>>')]";
-        public MainParser(
+        public ParsingOfMissingScientists(
             IRatingService ratingService,
             IWebDriver driver,
             IFieldOfResearchRepository fieldOfResearchRepository,

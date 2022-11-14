@@ -1,5 +1,6 @@
 ﻿using BLL.Interfaces;
 using BLL.Parsers.Interfaces;
+using DAL.Models;
 using Microsoft.AspNetCore.Mvc;
 
 
@@ -25,6 +26,13 @@ namespace Parser.Controllers
         public async Task<IActionResult> StartMainParser()
         {
             await _mainParser.StartParsing();
+            return Ok("Parsing succesfully started");
+        }
+
+        [HttpGet("StartParserWithParametrs")]
+        public async Task<IActionResult> StartMainParserWithP(ParsingType type)
+        {
+            await _mainParser.StartParsing(type);
             return Ok("Parsing succesfully started");
         }
 
