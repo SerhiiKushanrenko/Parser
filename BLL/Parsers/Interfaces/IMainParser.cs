@@ -2,9 +2,8 @@
 
 namespace BLL.Parsers.Interfaces
 {
-    public interface IMainParser
+    public interface IMainParser : IParse
     {
-        public Task StartParsing();
         public Task<List<string>> GetDirection();
         Task StartParsing(ParsingType type);
     }

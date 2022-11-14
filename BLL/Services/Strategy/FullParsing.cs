@@ -9,7 +9,7 @@ using System.Collections.ObjectModel;
 
 namespace BLL.Services.Strategy
 {
-    public class FullParsing : IMainParser
+    public class FullParsing : IParse
     {
         private readonly IWebDriver _driver;
         private readonly IFieldOfResearchRepository _fieldOfResearchRepository;

@@ -1,5 +1,6 @@
 ﻿using BLL.Helpers;
 using BLL.Parsers.Interfaces;
+using BLL.Services.Strategy;
 using BLL.Servises.Interfaces;
 using DAL.AdditionalModels;
 using DAL.Models;
@@ -17,8 +18,10 @@ namespace BLL.Parsers
         private readonly IRatingService _ratingService;
         private readonly IOrganizationRepository _organizationRepository;
         private readonly ISocialNetworkService _socialNetworkService;
-        private readonly IScientistSocialNetworkRepository _scientistSocialNetworkRepository;
         private readonly IParserDimensions _parserDimensions;
+
+        private readonly DimensionsOnly _dimensionsOnly;
+        private readonly FullParsing _fullParsing;
 
         //bibliometrics - we are going to take scientist names + social networks
         private const string NbuviapURL = @"http://nbuviap.gov.ua/bpnu/index.php?page=search";
@@ -36,8 +39,10 @@ namespace BLL.Parsers
             IScientistRepository scientistRepository,
             IOrganizationRepository organizationRepository,
             ISocialNetworkService socialNetworkService,
-            IScientistSocialNetworkRepository scientistSocialNetworkRepository,
-            IParserDimensions parserDimensions)
+            IParserDimensions parserDimensions,
+            DimensionsOnly dimensionsOnly,
+            FullParsing fullParsing
+            )
         {
             _ratingService = ratingService;
             _driver = driver;
@@ -45,8 +50,9 @@ namespace BLL.Parsers
             _scientistRepository = scientistRepository;
             _organizationRepository = organizationRepository;
             _socialNetworkService = socialNetworkService;
-            _scientistSocialNetworkRepository = scientistSocialNetworkRepository;
             _parserDimensions = parserDimensions;
+            this._dimensionsOnly = dimensionsOnly;
+            this._fullParsing = fullParsing;
         }
 
         /// <summary>
@@ -218,9 +224,22 @@ namespace BLL.Parsers
             return fieldOfResearch.Id;
         }
 
-        public Task StartParsing(ParsingType type)
+        public async Task StartParsing(ParsingType type)
         {
-            throw new NotImplementedException();
+            var strategy = new StrategyService();
+
+            switch (type)
+            {
+                case ParsingType.DimensionsOnly:
+                    strategy.SetMainParser(_dimensionsOnly);
+                    break;
+                case ParsingType.FullParsing:
+                    strategy.SetMainParser(_fullParsing);
+                    break;
+
+            }
+            await strategy.ExecuteStrategy();
+
         }
     }
 }

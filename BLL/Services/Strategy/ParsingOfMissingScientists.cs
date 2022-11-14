@@ -9,7 +9,7 @@ using System.Collections.ObjectModel;
 
 namespace BLL.Services.Strategy
 {
-    public class ParsingOfMissingScientists : IMainParser
+    public class ParsingOfMissingScientists : IParse
     {
         private readonly IWebDriver _driver;
         private readonly IFieldOfResearchRepository _fieldOfResearchRepository;

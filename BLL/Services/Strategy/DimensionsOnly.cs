@@ -1,9 +1,8 @@
 ﻿using BLL.Parsers.Interfaces;
-using DAL.Models;
 
 namespace BLL.Services.Strategy
 {
-    public class DimensionsOnly : IMainParser
+    public class DimensionsOnly : IParse
     {
         private readonly IParserDimensions _parserDimensions;
         public DimensionsOnly(IParserDimensions parserDimensions)
@@ -20,14 +19,5 @@ namespace BLL.Services.Strategy
             await _parserDimensions.StartParse();
         }
 
-        public Task StartParsing(ParsingType type)
-        {
-            throw new NotImplementedException();
-        }
-
-        public Task<List<string>> GetDirection()
-        {
-            throw new NotImplementedException();
-        }
     }
 }

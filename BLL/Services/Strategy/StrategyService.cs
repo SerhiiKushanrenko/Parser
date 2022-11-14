@@ -2,18 +2,18 @@
 
 namespace BLL.Services.Strategy
 {
-    internal class StrategyService
+    public class StrategyService
     {
-        private IMainParser mainParser;
+        private IParse mainParser;
 
-        public void SetMainParser(IMainParser _mainParser)
+        public void SetMainParser(IParse _mainParser)
         {
             mainParser = _mainParser;
         }
 
-        public void ExecuteStrategy()
+        public async Task ExecuteStrategy()
         {
-            mainParser.StartParsing();
+            await mainParser.StartParsing();
         }
     }
 }
