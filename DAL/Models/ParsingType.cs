@@ -5,7 +5,6 @@
         FullParsing,
         DimensionsOnly,
         ParsingOfMissingScientists,
-        IterativePageParsing
-
+        ParsingDimensionOneScientistBySecondName,
     }
 }

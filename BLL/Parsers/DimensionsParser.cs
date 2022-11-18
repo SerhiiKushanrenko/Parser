@@ -46,7 +46,7 @@ namespace BLL.Parsers
         private const int MajorFieldOfResearchLength = 2;
         private const int MinorSearch = 4;
 
-
+        // Dimensions - - we are going to take scientist fieldOfResearch , Concepts, Works
         private const string DimensionsUrl = @"https://app.dimensions.ai/discover/publication";
         public DimensionsParser(
             IScientistRepository scientistRepository,
@@ -93,7 +93,7 @@ namespace BLL.Parsers
                 foreach (var searchElement in listOfSearchElements)
                 {
                     // await CheckAndClickElement(searchElement.Item1, searchElement.Item2);
-                    await _asyncRetryPolicy.ExecuteAsync(() => ClickElemen(searchElement.Item1, searchElement.Item2));
+                    await _asyncRetryPolicy.ExecuteAsync(() => ClickElement(searchElement.Item1, searchElement.Item2));
                 }
 
 
@@ -120,6 +120,110 @@ namespace BLL.Parsers
             _driver.Quit();
         }
 
+        public async Task StartParseByList(List<Scientist> listOfScientist)
+        {
+            var fieldsOfResearches = await _fieldOfResearchRepository.GetAll().Include(fieldOfResearch => fieldOfResearch.ChildFieldsOfResearch).ToListAsync();
+            foreach (var scientist in listOfScientist)
+            {
+                _driver.Url = DimensionsUrl;
+
+                var scientistSecondName = TranslateToEnglish(scientist);
+
+                _driver.FindElement(By.XPath(SetInputOfSearch)).SendKeys(scientistSecondName);
+
+                List<(string, Func<string, By>)> listOfSearchElements = new()
+                {
+                    (SearchButtomCssSelector, By.CssSelector),
+                    (ResultOfSearchButton, By.XPath),
+                    ( $"//div[contains(@class,'sc-cVtpRj gwjQJA')]//li[contains(.,'{scientistSecondName}')]", By.XPath),
+                    (FindCurrentScientist, By.XPath),
+                    (ViewProfileScientist, By.XPath)
+                };
+
+                foreach (var searchElement in listOfSearchElements)
+                {
+                    // await CheckAndClickElement(searchElement.Item1, searchElement.Item2);
+                    await _asyncRetryPolicy.ExecuteAsync(() => ClickElement(searchElement.Item1, searchElement.Item2));
+                }
+
+
+
+                //await AddOrcidSocialNetwork(scientist);
+                if (await CheckSearchValidation(scientist))
+                {
+                    await AddConsepts(scientist);
+
+                    await AddScientistWork(scientist);
+
+                    await Task.Delay(3500);
+
+                    var listOfFieldsOfResearch = _driver
+                        .FindElements(By.XPath(
+                            GetListOfResearch))
+                        .Select(e => e.Text)
+                        .ToList();
+
+                    await CreateScientistFieldOfResearch(listOfFieldsOfResearch, fieldsOfResearches, scientist);
+                }
+            }
+            await _scientistRepository.UpdateAsync(listOfScientist);
+            _driver.Quit();
+        }
+
+
+
+        public async Task ParseDimensionsForSingleScientist(string? scientistName)
+        {
+            if (scientistName is not null)
+            {
+                var scientist = await _scientistRepository.GetAsync(scientistName);
+                var fieldsOfResearches = await _fieldOfResearchRepository.GetAll().Include(fieldOfResearch => fieldOfResearch.ChildFieldsOfResearch).ToListAsync();
+
+                _driver.Url = DimensionsUrl;
+
+                var scientistSecondName = TranslateToEnglish(scientist);
+
+                _driver.FindElement(By.XPath(SetInputOfSearch)).SendKeys(scientistSecondName);
+
+                List<(string, Func<string, By>)> listOfSearchElements = new()
+                {
+                    (SearchButtomCssSelector, By.CssSelector),
+                    (ResultOfSearchButton, By.XPath),
+                    ( $"//div[contains(@class,'sc-cVtpRj gwjQJA')]//li[contains(.,'{scientistSecondName}')]", By.XPath),
+                    (FindCurrentScientist, By.XPath),
+                    (ViewProfileScientist, By.XPath)
+                };
+
+                foreach (var searchElement in listOfSearchElements)
+                {
+                    // await CheckAndClickElement(searchElement.Item1, searchElement.Item2);
+                    await _asyncRetryPolicy.ExecuteAsync(() => ClickElement(searchElement.Item1, searchElement.Item2));
+                }
+
+
+
+                //await AddOrcidSocialNetwork(scientist);
+                if (await CheckSearchValidation(scientist))
+                {
+                    await AddConsepts(scientist);
+
+                    await AddScientistWork(scientist);
+
+                    await Task.Delay(3500);
+
+                    var listOfFieldsOfResearch = _driver
+                        .FindElements(By.XPath(
+                            GetListOfResearch))
+                        .Select(e => e.Text)
+                        .ToList();
+
+                    await CreateScientistFieldOfResearch(listOfFieldsOfResearch, fieldsOfResearches, scientist);
+                }
+                await _scientistRepository.UpdateAsync(scientist);
+                _driver.Quit();
+            }
+
+        }
         private async Task AddConsepts(Scientist scientist)
         {
             var parseListOfConcept = new List<string>();
@@ -327,27 +431,9 @@ namespace BLL.Parsers
             await _scientistFieldOfResearchRepository.UpdateAsync(listOfScientistFieldOfResearch);
         }
 
-        private async Task ClickElemen(string a, Func<string, By> findBy)
+        private async Task ClickElement(string a, Func<string, By> findBy)
         {
             _driver.FindElement(findBy(a)).Click();
-        }
-
-        private async Task CheckAndClickElement(string a, Func<string, By> findBy)
-        {
-            do
-            {
-                try
-                {
-                    _driver.FindElement(findBy(a)).Click();
-                    return;
-                }
-                catch (OpenQA.Selenium.NoSuchElementException e)
-                {
-                    await Task.Delay(2000);
-                }
-            }
-            while (true);
-
         }
 
         private async Task<string> GetStringCountOfWork(string a, Func<string, By> findBy)

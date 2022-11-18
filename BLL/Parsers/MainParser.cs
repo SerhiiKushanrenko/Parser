@@ -1,12 +1,11 @@
 ﻿using BLL.Helpers;
 using BLL.Parsers.Interfaces;
-using BLL.Services.Strategy;
+
 using BLL.Servises.Interfaces;
 using DAL.AdditionalModels;
 using DAL.Models;
 using DAL.Repositories.Interfaces;
 using OpenQA.Selenium;
-using System.Collections.ObjectModel;
 
 namespace BLL.Parsers
 {
@@ -20,8 +19,6 @@ namespace BLL.Parsers
         private readonly ISocialNetworkService _socialNetworkService;
         private readonly IParserDimensions _parserDimensions;
 
-        private readonly DimensionsOnly _dimensionsOnly;
-        private readonly FullParsing _fullParsing;
 
         //bibliometrics - we are going to take scientist names + social networks
         private const string NbuviapURL = @"http://nbuviap.gov.ua/bpnu/index.php?page=search";
@@ -39,10 +36,8 @@ namespace BLL.Parsers
             IScientistRepository scientistRepository,
             IOrganizationRepository organizationRepository,
             ISocialNetworkService socialNetworkService,
-            IParserDimensions parserDimensions,
-            DimensionsOnly dimensionsOnly,
-            FullParsing fullParsing
-            )
+            IParserDimensions parserDimensions
+        )
         {
             _ratingService = ratingService;
             _driver = driver;
@@ -51,8 +46,6 @@ namespace BLL.Parsers
             _organizationRepository = organizationRepository;
             _socialNetworkService = socialNetworkService;
             _parserDimensions = parserDimensions;
-            this._dimensionsOnly = dimensionsOnly;
-            this._fullParsing = fullParsing;
         }
 
         /// <summary>
@@ -63,8 +56,6 @@ namespace BLL.Parsers
         {
             await ParseNameSocialNetworkFieldOfSearch();
             await _parserDimensions.StartParse();
-            //-source is not working
-            //  await _supportParser.AddListOfWorkAndDegree();
         }
 
         /// <summary>
@@ -124,10 +115,10 @@ namespace BLL.Parsers
 
                     var ListOfCurrentFieldsOfResearchElements = StrHelper.GetListFieldOfSearch(fieldsOfResearchElements);
 
-                    var scientistsNamesElements = _driver.FindElements(By.XPath(GetListOfScientists));
+                    var scientistsNamesElements = _driver.FindElements(By.XPath(GetListOfScientists)).Select(e => e.Text).ToList();
 
                     var organizationsElements = _driver
-                        .FindElements(By.XPath(GetListOfOrganizations));
+                        .FindElements(By.XPath(GetListOfOrganizations)).Select(e => e.Text).ToList();
 
                     await AddScientistFieldOfResearchOrganization(scientistsNamesElements, ListOfCurrentFieldsOfResearchElements, organizationsElements);
 
@@ -149,14 +140,15 @@ namespace BLL.Parsers
             _driver.Quit();
         }
 
-        private async Task AddScientistFieldOfResearchOrganization(ReadOnlyCollection<IWebElement> scientistsNamesElements, List<string> ListOfCurrentFieldsOfResearchElements, ReadOnlyCollection<IWebElement> organizationElements)
+        private async Task AddScientistFieldOfResearchOrganization(IReadOnlyCollection<string> scientistsNamesElements, IReadOnlyList<string> ListOfCurrentFieldsOfResearchElements, IReadOnlyList<string> organizationElements)
         {
+            List<Scientist> listOScientists = new();
             for (int i = 0; i < scientistsNamesElements.Count; i++)
             {
-                var scientistName = StrHelper.GetScientistName(scientistsNamesElements.ElementAt(i).Text);
+                var scientistName = StrHelper.GetScientistName(scientistsNamesElements.ElementAt(i));
                 var fieldOfResearchId = await FieldOfResearchId(ListOfCurrentFieldsOfResearchElements[i]);
 
-                var organizationId = await GetOrganizationId(organizationElements[i].Text);
+                var organizationId = await GetOrganizationId(organizationElements[i]);
 
                 var scientist = new Scientist()
                 {
@@ -178,8 +170,11 @@ namespace BLL.Parsers
                     ExtractScientistHRating(scientist);
 
                     await _scientistRepository.CreateAsync(scientist);
+                    listOScientists.Add(scientist);
                 }
             }
+
+            await _parserDimensions.StartParseByList(listOScientists);
         }
 
         private void ExtractScientistHRating(Scientist scientist)
@@ -224,21 +219,75 @@ namespace BLL.Parsers
             return fieldOfResearch.Id;
         }
 
-        public async Task StartParsing(ParsingType type)
+        private async Task ParsingOfMissingScientists()
         {
-            var strategy = new StrategyService();
+            _driver.Url = NbuviapURL;
+            await Task.Delay(500);
 
+            try
+            {
+                _driver.FindElement(By.XPath(SearchButtonXPath)).Click();
+
+                await Task.Delay(4000);
+
+                while (true)
+                {
+
+                    var scientistsNamesElements = _driver.FindElements(By.XPath(GetListOfScientists));
+
+                    var scientistNames = StrHelper.GetListOfScientistName(scientistsNamesElements);
+
+                    var missingScientist = (from scientistName in scientistNames
+                                            where _scientistRepository.GetAll().Any(e => !e.Name.Equals(scientistName))
+                                            select _scientistRepository.GetAll().FirstOrDefault(e => e.Name.Equals(scientistName))!.Name).ToList();
+
+                    var listOfFieldsOfResearch = new List<string>();
+
+                    var listOfOrganizations = new List<string>();
+
+                    foreach (var scientistName in missingScientist)
+                    {
+                        listOfFieldsOfResearch.Add(_driver.FindElement(By.XPath($"//td[contains(.,'{scientistName}')]//..//td[7]")).Text);
+                        listOfOrganizations.Add(_driver.FindElement(By.XPath($"//td[contains(.,'{scientistName}')]//..//td[8]")).Text);
+                    }
+
+                    await AddScientistFieldOfResearchOrganization(scientistNames, listOfFieldsOfResearch, listOfOrganizations);
+
+
+                    try
+                    {
+                        _driver.FindElement(By.XPath(NextPageButtonXPath)).Click();
+                    }
+                    catch (NoSuchElementException e)
+                    {
+                        break;
+                    }
+                }
+            }
+            catch (Exception)
+            {
+                _driver.Quit();
+            }
+
+            _driver.Quit();
+        }
+        public async Task StartParsing(ParsingType type, string? scientistSecondName)
+        {
             switch (type)
             {
                 case ParsingType.DimensionsOnly:
-                    strategy.SetMainParser(_dimensionsOnly);
+                    await _parserDimensions.StartParse();
                     break;
                 case ParsingType.FullParsing:
-                    strategy.SetMainParser(_fullParsing);
+                    await StartParsing();
                     break;
-
+                case ParsingType.ParsingOfMissingScientists:
+                    await ParsingOfMissingScientists();
+                    break;
+                case ParsingType.ParsingDimensionOneScientistBySecondName:
+                    await _parserDimensions.ParseDimensionsForSingleScientist(scientistSecondName);
+                    break;
             }
-            await strategy.ExecuteStrategy();
 
         }
     }

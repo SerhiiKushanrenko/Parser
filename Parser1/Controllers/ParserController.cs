@@ -30,9 +30,9 @@ namespace Parser.Controllers
         }
 
         [HttpGet("StartParserWithParametrs")]
-        public async Task<IActionResult> StartMainParserWithP(ParsingType type)
+        public async Task<IActionResult> StartMainParserWithP(ParsingType type, string? scientistSecondName)
         {
-            await _mainParser.StartParsing(type);
+            await _mainParser.StartParsing(type, scientistSecondName);
             return Ok("Parsing succesfully started");
         }
 

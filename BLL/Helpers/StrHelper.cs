@@ -6,6 +6,26 @@ namespace BLL.Helpers
 {
     public static class StrHelper
     {
+
+        public static List<string> GetListOfScientistName(ReadOnlyCollection<IWebElement> scientistsNamesElements)
+        {
+            var scientistNames = new List<string>();
+
+            foreach (var scientistsNamesElement in scientistsNamesElements)
+            {
+                if (scientistsNamesElement.Text.Contains('('))
+                {
+                    var result = scientistsNamesElement.Text.Split('(');
+                    scientistNames.Add(result[0].TrimEnd());
+                }
+                else
+                {
+                    scientistNames.Add(scientistsNamesElement.Text);
+                }
+            }
+            return scientistNames;
+        }
+
         public static string GetScientistName(string name)
         {
             if (name.Contains('('))
