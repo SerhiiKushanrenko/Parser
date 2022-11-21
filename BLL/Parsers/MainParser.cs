@@ -1,8 +1,6 @@
-﻿using BLL.Helpers;
-using BLL.Parsers.Interfaces;
+﻿using BLL.Parsers.Interfaces;
 
 using BLL.Servises.Interfaces;
-using DAL.AdditionalModels;
 using DAL.Models;
 using DAL.Repositories.Interfaces;
 using OpenQA.Selenium;
@@ -18,6 +16,7 @@ namespace BLL.Parsers
         private readonly IOrganizationRepository _organizationRepository;
         private readonly ISocialNetworkService _socialNetworkService;
         private readonly IParserDimensions _parserDimensions;
+        private readonly INbuviapParser _nbuviapParser;
 
 
         //bibliometrics - we are going to take scientist names + social networks
@@ -36,7 +35,9 @@ namespace BLL.Parsers
             IScientistRepository scientistRepository,
             IOrganizationRepository organizationRepository,
             ISocialNetworkService socialNetworkService,
-            IParserDimensions parserDimensions
+            IParserDimensions parserDimensions,
+            INbuviapParser nbuviapParser
+
         )
         {
             _ratingService = ratingService;
@@ -46,231 +47,232 @@ namespace BLL.Parsers
             _organizationRepository = organizationRepository;
             _socialNetworkService = socialNetworkService;
             _parserDimensions = parserDimensions;
+            _nbuviapParser = nbuviapParser;
         }
 
-        /// <summary>
-        /// the main parser 
-        /// </summary>
-        /// <returns></returns>
-        public async Task StartParsing()
-        {
-            await ParseNameSocialNetworkFieldOfSearch();
-            await _parserDimensions.StartParse();
-        }
+        ///// <summary>
+        ///// the main parser 
+        ///// </summary>
+        ///// <returns></returns>
+        //public async Task StartParsing()
+        //{
+        //    await ParseNameSocialNetworkFieldOfSearch();
+        //    await _parserDimensions.StartParse();
+        //}
 
-        /// <summary>
-        /// Get and check current directions 
-        /// </summary>
-        /// <returns></returns>
-        public async Task<List<string>> GetDirection()
-        {
-            _driver.Url = @"http://nbuviap.gov.ua/bpnu/index.php?page=search";
+        ///// <summary>
+        ///// Get and check current directions 
+        ///// </summary>
+        ///// <returns></returns>
+        //public async Task<List<string>> GetDirection()
+        //{
+        //    _driver.Url = @"http://nbuviap.gov.ua/bpnu/index.php?page=search";
 
-            var directionsElements = _driver.FindElements(By.XPath("//*[@id=\"galuz1\"]/option"));
-            var foundDirections = new List<string>();
+        //    var directionsElements = _driver.FindElements(By.XPath("//*[@id=\"galuz1\"]/option"));
+        //    var foundDirections = new List<string>();
 
-            foreach (var direction in directionsElements)
-            {
-                if (string.IsNullOrEmpty(direction.Text))
-                {
-                    continue;
-                }
-                foundDirections.Add(direction.Text);
-            }
+        //    foreach (var direction in directionsElements)
+        //    {
+        //        if (string.IsNullOrEmpty(direction.Text))
+        //        {
+        //            continue;
+        //        }
+        //        foundDirections.Add(direction.Text);
+        //    }
 
-            if (foundDirections.Count == await _fieldOfResearchRepository.GetCountAsync())
-                return foundDirections;
+        //    if (foundDirections.Count == await _fieldOfResearchRepository.GetCountAsync())
+        //        return foundDirections;
 
-            var existingDirections = _fieldOfResearchRepository.GetAll();
-            var nonExistingDirections = foundDirections
-                .Where(foundDirection => !existingDirections.Any(existingDirection => existingDirection.Title.Equals(foundDirection)));
+        //    var existingDirections = _fieldOfResearchRepository.GetAll();
+        //    var nonExistingDirections = foundDirections
+        //        .Where(foundDirection => !existingDirections.Any(existingDirection => existingDirection.Title.Equals(foundDirection)));
 
-            await _fieldOfResearchRepository.CreateAsync(nonExistingDirections.Select(directionName => new FieldOfResearch()
-            {
-                Title = directionName
-            }));
+        //    await _fieldOfResearchRepository.CreateAsync(nonExistingDirections.Select(directionName => new FieldOfResearch()
+        //    {
+        //        Title = directionName
+        //    }));
 
-            return foundDirections;
-        }
+        //    return foundDirections;
+        //}
 
-        /// <summary>
-        /// The main Method By Parser from nbuviap 
-        /// </summary>
-        /// <returns></returns>
-        private async Task ParseNameSocialNetworkFieldOfSearch()
-        {
-            _driver.Url = NbuviapURL;
+        ///// <summary>
+        ///// The main Method By Parser from nbuviap 
+        ///// </summary>
+        ///// <returns></returns>
+        //private async Task ParseNameSocialNetworkFieldOfSearch()
+        //{
+        //    _driver.Url = NbuviapURL;
 
-            await Task.Delay(500);
+        //    await Task.Delay(500);
 
-            try
-            {
-                _driver.FindElement(By.XPath(SearchButtonXPath)).Click();
+        //    try
+        //    {
+        //        _driver.FindElement(By.XPath(SearchButtonXPath)).Click();
 
-                await Task.Delay(4000);
+        //        await Task.Delay(4000);
 
-                while (true)
-                {
-                    var fieldsOfResearchElements = _driver.FindElements(By.XPath(ResearchElementXPath));
+        //        while (true)
+        //        {
+        //            var fieldsOfResearchElements = _driver.FindElements(By.XPath(ResearchElementXPath));
 
-                    var ListOfCurrentFieldsOfResearchElements = StrHelper.GetListFieldOfSearch(fieldsOfResearchElements);
+        //            var ListOfCurrentFieldsOfResearchElements = StrHelper.GetListFieldOfSearch(fieldsOfResearchElements);
 
-                    var scientistsNamesElements = _driver.FindElements(By.XPath(GetListOfScientists)).Select(e => e.Text).ToList();
+        //            var scientistsNamesElements = _driver.FindElements(By.XPath(GetListOfScientists)).Select(e => e.Text).ToList();
 
-                    var organizationsElements = _driver
-                        .FindElements(By.XPath(GetListOfOrganizations)).Select(e => e.Text).ToList();
+        //            var organizationsElements = _driver
+        //                .FindElements(By.XPath(GetListOfOrganizations)).Select(e => e.Text).ToList();
 
-                    await AddScientistFieldOfResearchOrganization(scientistsNamesElements, ListOfCurrentFieldsOfResearchElements, organizationsElements);
+        //            await AddScientistFieldOfResearchOrganization(scientistsNamesElements, ListOfCurrentFieldsOfResearchElements, organizationsElements);
 
-                    try
-                    {
-                        _driver.FindElement(By.XPath(NextPageButtonXPath)).Click();
-                    }
-                    catch (NoSuchElementException e)
-                    {
-                        break;
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                _driver.Quit();
-            }
+        //            try
+        //            {
+        //                _driver.FindElement(By.XPath(NextPageButtonXPath)).Click();
+        //            }
+        //            catch (NoSuchElementException e)
+        //            {
+        //                break;
+        //            }
+        //        }
+        //    }
+        //    catch (Exception)
+        //    {
+        //        _driver.Quit();
+        //    }
 
-            _driver.Quit();
-        }
+        //    _driver.Quit();
+        //}
 
-        private async Task AddScientistFieldOfResearchOrganization(IReadOnlyCollection<string> scientistsNamesElements, IReadOnlyList<string> ListOfCurrentFieldsOfResearchElements, IReadOnlyList<string> organizationElements)
-        {
-            List<Scientist> listOScientists = new();
-            for (int i = 0; i < scientistsNamesElements.Count; i++)
-            {
-                var scientistName = StrHelper.GetScientistName(scientistsNamesElements.ElementAt(i));
-                var fieldOfResearchId = await FieldOfResearchId(ListOfCurrentFieldsOfResearchElements[i]);
+        //private async Task AddScientistFieldOfResearchOrganization(IReadOnlyCollection<string> scientistsNamesElements, IReadOnlyList<string> ListOfCurrentFieldsOfResearchElements, IReadOnlyList<string> organizationElements)
+        //{
+        //    List<Scientist> listOScientists = new();
+        //    for (int i = 0; i < scientistsNamesElements.Count; i++)
+        //    {
+        //        var scientistName = StrHelper.GetScientistName(scientistsNamesElements.ElementAt(i));
+        //        var fieldOfResearchId = await FieldOfResearchId(ListOfCurrentFieldsOfResearchElements[i]);
 
-                var organizationId = await GetOrganizationId(organizationElements[i]);
+        //        var organizationId = await GetOrganizationId(organizationElements[i]);
 
-                var scientist = new Scientist()
-                {
-                    Name = scientistName,
-                    OrganizationId = organizationId,
-                    ScientistFieldsOfResearch = new List<ScientistFieldOfResearch>
-                    {
-                        new ScientistFieldOfResearch()
-                        {
-                            FieldOfResearchId = fieldOfResearchId
-                        }
-                    }
-                };
-                var foundResult = await _scientistRepository.GetAsync(scientist.Name);
+        //        var scientist = new Scientist()
+        //        {
+        //            Name = scientistName,
+        //            OrganizationId = organizationId,
+        //            ScientistFieldsOfResearch = new List<ScientistFieldOfResearch>
+        //            {
+        //                new ScientistFieldOfResearch()
+        //                {
+        //                    FieldOfResearchId = fieldOfResearchId
+        //                }
+        //            }
+        //        };
+        //        var foundResult = await _scientistRepository.GetAsync(scientist.Name);
 
-                if (foundResult is null)
-                {
-                    _socialNetworkService.GetSocialNetwork(scientist);
-                    ExtractScientistHRating(scientist);
+        //        if (foundResult is null)
+        //        {
+        //            _socialNetworkService.GetSocialNetwork(scientist);
+        //            ExtractScientistHRating(scientist);
 
-                    await _scientistRepository.CreateAsync(scientist);
-                    listOScientists.Add(scientist);
-                }
-            }
+        //            await _scientistRepository.CreateAsync(scientist);
+        //            listOScientists.Add(scientist);
+        //        }
+        //    }
 
-            await _parserDimensions.StartParseByList(listOScientists);
-        }
+        //    await _parserDimensions.StartParseByList(listOScientists);
+        //}
 
-        private void ExtractScientistHRating(Scientist scientist)
-        {
-            var googleScholar = scientist.ScientistSocialNetworks.FirstOrDefault(networkData => networkData.Type == SocialNetworkType.GoogleScholar);
-            if (googleScholar is not null)
-            {
-                scientist.Rating = _ratingService.GetRatingGoogleScholar(googleScholar.Url);
-            }
-        }
+        //private void ExtractScientistHRating(Scientist scientist)
+        //{
+        //    var googleScholar = scientist.ScientistSocialNetworks.FirstOrDefault(networkData => networkData.Type == SocialNetworkType.GoogleScholar);
+        //    if (googleScholar is not null)
+        //    {
+        //        scientist.Rating = _ratingService.GetRatingGoogleScholar(googleScholar.Url);
+        //    }
+        //}
 
-        private async Task<int> GetOrganizationId(string organizationElements)
-        {
-            var result = await _organizationRepository.GetAsync(organizationElements);
-            if (result is not null) return result.Id;
-            var newOrganization = new Organization()
-            {
-                Name = organizationElements,
-            };
+        //private async Task<int> GetOrganizationId(string organizationElements)
+        //{
+        //    var result = await _organizationRepository.GetAsync(organizationElements);
+        //    if (result is not null) return result.Id;
+        //    var newOrganization = new Organization()
+        //    {
+        //        Name = organizationElements,
+        //    };
 
-            await _organizationRepository.CreateAsync(newOrganization);
-            return newOrganization.Id;
-        }
+        //    await _organizationRepository.CreateAsync(newOrganization);
+        //    return newOrganization.Id;
+        //}
 
-        private async Task<int> FieldOfResearchId(string currentFieldOfResearch)
-        {
-            var fieldOfResearch = await _fieldOfResearchRepository.GetAsync(currentFieldOfResearch);
+        //private async Task<int> FieldOfResearchId(string currentFieldOfResearch)
+        //{
+        //    var fieldOfResearch = await _fieldOfResearchRepository.GetAsync(currentFieldOfResearch);
 
-            if (fieldOfResearch is not null)
-            {
-                return fieldOfResearch.Id;
-            }
-            var listOfResearch = await GetDirection();
-            foreach (var research in listOfResearch)
-            {
-                if (research.Contains(currentFieldOfResearch))
-                {
-                    var fieldOfResearchId = await _fieldOfResearchRepository.GetAsync(currentFieldOfResearch);
-                    return fieldOfResearchId.Id;
-                }
-            }
-            return fieldOfResearch.Id;
-        }
+        //    if (fieldOfResearch is not null)
+        //    {
+        //        return fieldOfResearch.Id;
+        //    }
+        //    var listOfResearch = await GetDirection();
+        //    foreach (var research in listOfResearch)
+        //    {
+        //        if (research.Contains(currentFieldOfResearch))
+        //        {
+        //            var fieldOfResearchId = await _fieldOfResearchRepository.GetAsync(currentFieldOfResearch);
+        //            return fieldOfResearchId.Id;
+        //        }
+        //    }
+        //    return fieldOfResearch.Id;
+        //}
 
-        private async Task ParsingOfMissingScientists()
-        {
-            _driver.Url = NbuviapURL;
-            await Task.Delay(500);
+        //private async Task ParsingOfMissingScientists()
+        //{
+        //    _driver.Url = NbuviapURL;
+        //    await Task.Delay(500);
 
-            try
-            {
-                _driver.FindElement(By.XPath(SearchButtonXPath)).Click();
+        //    try
+        //    {
+        //        _driver.FindElement(By.XPath(SearchButtonXPath)).Click();
 
-                await Task.Delay(4000);
+        //        await Task.Delay(4000);
 
-                while (true)
-                {
+        //        while (true)
+        //        {
 
-                    var scientistsNamesElements = _driver.FindElements(By.XPath(GetListOfScientists));
+        //            var scientistsNamesElements = _driver.FindElements(By.XPath(GetListOfScientists));
 
-                    var scientistNames = StrHelper.GetListOfScientistName(scientistsNamesElements);
+        //            var scientistNames = StrHelper.GetListOfScientistName(scientistsNamesElements);
 
-                    var missingScientist = (from scientistName in scientistNames
-                                            where _scientistRepository.GetAll().Any(e => !e.Name.Equals(scientistName))
-                                            select _scientistRepository.GetAll().FirstOrDefault(e => e.Name.Equals(scientistName))!.Name).ToList();
+        //            var missingScientist = (from scientistName in scientistNames
+        //                                    where _scientistRepository.GetAll().Any(e => !e.Name.Equals(scientistName))
+        //                                    select _scientistRepository.GetAll().FirstOrDefault(e => e.Name.Equals(scientistName))!.Name).ToList();
 
-                    var listOfFieldsOfResearch = new List<string>();
+        //            var listOfFieldsOfResearch = new List<string>();
 
-                    var listOfOrganizations = new List<string>();
+        //            var listOfOrganizations = new List<string>();
 
-                    foreach (var scientistName in missingScientist)
-                    {
-                        listOfFieldsOfResearch.Add(_driver.FindElement(By.XPath($"//td[contains(.,'{scientistName}')]//..//td[7]")).Text);
-                        listOfOrganizations.Add(_driver.FindElement(By.XPath($"//td[contains(.,'{scientistName}')]//..//td[8]")).Text);
-                    }
+        //            foreach (var scientistName in missingScientist)
+        //            {
+        //                listOfFieldsOfResearch.Add(_driver.FindElement(By.XPath($"//td[contains(.,'{scientistName}')]//..//td[7]")).Text);
+        //                listOfOrganizations.Add(_driver.FindElement(By.XPath($"//td[contains(.,'{scientistName}')]//..//td[8]")).Text);
+        //            }
 
-                    await AddScientistFieldOfResearchOrganization(scientistNames, listOfFieldsOfResearch, listOfOrganizations);
+        //            await AddScientistFieldOfResearchOrganization(scientistNames, listOfFieldsOfResearch, listOfOrganizations);
 
 
-                    try
-                    {
-                        _driver.FindElement(By.XPath(NextPageButtonXPath)).Click();
-                    }
-                    catch (NoSuchElementException e)
-                    {
-                        break;
-                    }
-                }
-            }
-            catch (Exception)
-            {
-                _driver.Quit();
-            }
+        //            try
+        //            {
+        //                _driver.FindElement(By.XPath(NextPageButtonXPath)).Click();
+        //            }
+        //            catch (NoSuchElementException e)
+        //            {
+        //                break;
+        //            }
+        //        }
+        //    }
+        //    catch (Exception)
+        //    {
+        //        _driver.Quit();
+        //    }
 
-            _driver.Quit();
-        }
+        //    _driver.Quit();
+        //}
         public async Task StartParsing(ParsingType type, string? scientistSecondName)
         {
             switch (type)
@@ -279,10 +281,10 @@ namespace BLL.Parsers
                     await _parserDimensions.StartParse();
                     break;
                 case ParsingType.FullParsing:
-                    await StartParsing();
+                    await _nbuviapParser.StartParsing();
                     break;
                 case ParsingType.ParsingOfMissingScientists:
-                    await ParsingOfMissingScientists();
+                    await _nbuviapParser.ParsingOfMissingScientists();
                     break;
                 case ParsingType.ParsingDimensionOneScientistBySecondName:
                     await _parserDimensions.ParseDimensionsForSingleScientist(scientistSecondName);
