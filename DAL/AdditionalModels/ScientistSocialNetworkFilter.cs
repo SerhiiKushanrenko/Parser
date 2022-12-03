@@ -9,7 +9,7 @@
 
     public enum SocialNetworkType
     {
-        GoogleScholar,
+        Google,
         Scopus,
         WOS,
         ORCID

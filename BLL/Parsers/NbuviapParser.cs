@@ -49,7 +49,7 @@ namespace BLL.Parsers
 
         public async Task StartParsing()
         {
-            await ParseNameSocialNetworkFieldOfSearch();
+            await ParseScientists();
             await _parserDimensions.StartParse();
         }
 
@@ -92,7 +92,7 @@ namespace BLL.Parsers
         /// The main Method By Parser from nbuviap 
         /// </summary>
         /// <returns></returns>
-        private async Task ParseNameSocialNetworkFieldOfSearch()
+        private async Task ParseScientists()
         {
             _driver.Url = NbuviapURL;
 
@@ -106,16 +106,17 @@ namespace BLL.Parsers
 
                 while (true)
                 {
-                    var fieldsOfResearchElements = _driver.FindElements(By.XPath(ResearchElementXPath));
-
-                    var ListOfCurrentFieldsOfResearchElements = StrHelper.GetListFieldOfSearch(fieldsOfResearchElements);
-
                     var scientistsNamesElements = _driver.FindElements(By.XPath(GetListOfScientists)).Select(e => e.Text).ToList();
+
+                    var currentFieldsOfResearchElements = _driver.FindElements(By.XPath(ResearchElementXPath)).Select(element => element.Text.Split('\r')[0]).ToList();
 
                     var organizationsElements = _driver
                         .FindElements(By.XPath(GetListOfOrganizations)).Select(e => e.Text).ToList();
 
-                    await AddScientistFieldOfResearchOrganization(scientistsNamesElements, ListOfCurrentFieldsOfResearchElements, organizationsElements);
+                    for (int i = 0; i < scientistsNamesElements.Count; i++)
+                    {
+                        await AddScientistData((scientistsNamesElements[i], currentFieldsOfResearchElements[i], organizationsElements[i]));
+                    }
 
                     try
                     {
@@ -135,46 +136,41 @@ namespace BLL.Parsers
             _driver.Quit();
         }
 
-        private async Task AddScientistFieldOfResearchOrganization(IReadOnlyCollection<string> scientistsNamesElements, IReadOnlyList<string> ListOfCurrentFieldsOfResearchElements, IReadOnlyList<string> organizationElements)
+        private async Task AddScientistData((string NameElement, string FieldOfResearchElement, string OrganizationElement) scientistData)
         {
             List<Scientist> listOScientists = new();
-            for (int i = 0; i < scientistsNamesElements.Count; i++)
+            var scientistName = StrHelper.GetScientistName(scientistData.NameElement);
+            var fieldOfResearchId = await FieldOfResearchId(scientistData.FieldOfResearchElement);
+            var organizationId = await GetOrganizationId(scientistData.OrganizationElement);
+
+            var scientist = new Scientist()
             {
-                var scientistName = StrHelper.GetScientistName(scientistsNamesElements.ElementAt(i));
-                var fieldOfResearchId = await FieldOfResearchId(ListOfCurrentFieldsOfResearchElements[i]);
-
-                var organizationId = await GetOrganizationId(organizationElements[i]);
-
-                var scientist = new Scientist()
-                {
-                    Name = scientistName,
-                    OrganizationId = organizationId,
-                    ScientistFieldsOfResearch = new List<ScientistFieldOfResearch>
+                Name = scientistName,
+                OrganizationId = organizationId,
+                ScientistFieldsOfResearch = new List<ScientistFieldOfResearch>
                     {
                         new ScientistFieldOfResearch()
                         {
                             FieldOfResearchId = fieldOfResearchId
                         }
                     }
-                };
-                var foundResult = await _scientistRepository.GetAsync(scientist.Name);
+            };
 
-                if (foundResult is null)
-                {
-                    _socialNetworkService.GetSocialNetwork(scientist);
-                    ExtractScientistHRating(scientist);
+            var foundResult = await _scientistRepository.GetAsync(scientistName);
 
-                    await _scientistRepository.CreateAsync(scientist);
-                    listOScientists.Add(scientist);
-                }
+            if (foundResult is null)
+            {
+                await _socialNetworkService.GetSocialNetwork(scientist);
+                ExtractScientistHRating(scientist);
+
+                await _scientistRepository.CreateAsync(scientist);
+                listOScientists.Add(scientist);
             }
-
-            await _parserDimensions.StartParseByList(listOScientists);
         }
 
         private void ExtractScientistHRating(Scientist scientist)
         {
-            var googleScholar = scientist.ScientistSocialNetworks.FirstOrDefault(networkData => networkData.Type == SocialNetworkType.GoogleScholar);
+            var googleScholar = scientist.ScientistSocialNetworks.FirstOrDefault(networkData => networkData.Type == SocialNetworkType.Google);
             if (googleScholar is not null)
             {
                 scientist.Rating = _ratingService.GetRatingGoogleScholar(googleScholar.Url);
@@ -214,7 +210,7 @@ namespace BLL.Parsers
             return fieldOfResearch.Id;
         }
 
-        public async Task ParsingOfMissingScientists()
+        /*public async Task ParsingOfMissingScientists()
         {
             _driver.Url = NbuviapURL;
             await Task.Delay(500);
@@ -246,7 +242,7 @@ namespace BLL.Parsers
                         listOfOrganizations.Add(_driver.FindElement(By.XPath($"//td[contains(.,'{scientistName}')]//..//td[8]")).Text);
                     }
 
-                    await AddScientistFieldOfResearchOrganization(scientistNames, listOfFieldsOfResearch, listOfOrganizations);
+                    await AddScientistData(scientistNames, listOfFieldsOfResearch, listOfOrganizations);
 
 
                     try
@@ -265,9 +261,6 @@ namespace BLL.Parsers
             }
 
             _driver.Quit();
-        }
-
-
-
+        }*/
     }
 }

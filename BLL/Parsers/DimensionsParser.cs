@@ -25,11 +25,11 @@ namespace BLL.Parsers
         private readonly AsyncRetryPolicy _asyncRetryPolicy;
 
 
-        private const string SetInputOfSearch = "//div[contains(@class,'sc-jccYHG ghibKI')]/textarea";
+        private const string SetInputOfSearch = "//*[@id='header']/div[2]/div/div/div/div/textarea";
         private const string SearchButtomCssSelector = "#header > div.sc-bgzEgf.iEWfss > div > div.sc-eAeVAz.bnxygZ > div > button.sc-187562o-0.ghWmxP.sc-fmixVB.cYiQVv";
         private const string ResultOfSearchButton = "//main//div[1]//div[2]//div[2]/header/div";
-        private const string FindCurrentScientist = "//div[contains(@class,'sc-nl6x4m-1 iHbsPV')]/a[contains(@class,'sc-bcXHqe sc-gswNZR sc-fLcnxK fxVSoY jBJJmv fvYWgK')]";
-        private const string ViewProfileScientist = "//div[contains(@class,'sc-11v30f2-4 gwEvAC')]//a";
+        private const string FindCurrentScientist = "/html/body/div[1]/div[2]/main/div/div[1]/div/div/div[2]/div/div[8]/div/div/a";
+        private const string ViewProfileScientist = "//*[@id='mainContentBlock']/div/div/div/div[1]/header/div[2]/div[2]/a";
         private const string GetListOfResearch = "//*[@id=\"mainContentBlock\"]/div/article[1]/div/section[1]/div/ol/li";
         private const string FindOrcidUrl = "//aside//a[1]";
         private const string ListOfWork =
@@ -66,7 +66,7 @@ namespace BLL.Parsers
             _scientistWorkRepository = scientistWorkRepository;
             _workRepository = workRepository;
             _conceptRepository = conceptRepository;
-            _asyncRetryPolicy = Policy.Handle<NoSuchElementException>().WaitAndRetryAsync(retryCount: 3, sleepDurationProvider: e => TimeSpan.FromSeconds(2));
+            _asyncRetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(retryCount: 3, sleepDurationProvider: e => TimeSpan.FromSeconds(2));
         }
 
         public async Task StartParse()
@@ -79,11 +79,10 @@ namespace BLL.Parsers
 
                 var scientistSecondName = TranslateToEnglish(scientist);
 
-                _driver.FindElement(By.XPath(SetInputOfSearch)).SendKeys(scientistSecondName);
-
+                _driver.FindElement(By.XPath(SetInputOfSearch), 3).SendKeys(scientistSecondName);
+                _driver.FindElement(By.XPath(SetInputOfSearch), 3).SendKeys(Keys.Enter);
                 List<(string, Func<string, By>)> listOfSearchElements = new()
                 {
-                    (SearchButtomCssSelector, By.CssSelector),
                     (ResultOfSearchButton, By.XPath),
                     ( $"//div[contains(@class,'sc-cVtpRj gwjQJA')]//li[contains(.,'{scientistSecondName}')]", By.XPath),
                     (FindCurrentScientist, By.XPath),
@@ -109,7 +108,7 @@ namespace BLL.Parsers
 
                     var listOfFieldsOfResearch = _driver
                         .FindElements(By.XPath(
-                            GetListOfResearch))
+                            GetListOfResearch), 3)
                         .Select(e => e.Text)
                         .ToList();
 
@@ -129,7 +128,7 @@ namespace BLL.Parsers
 
                 var scientistSecondName = TranslateToEnglish(scientist);
 
-                _driver.FindElement(By.XPath(SetInputOfSearch)).SendKeys(scientistSecondName);
+                _driver.FindElement(By.XPath(SetInputOfSearch), 3).SendKeys(scientistSecondName);
 
                 List<(string, Func<string, By>)> listOfSearchElements = new()
                 {
@@ -159,7 +158,7 @@ namespace BLL.Parsers
 
                     var listOfFieldsOfResearch = _driver
                         .FindElements(By.XPath(
-                            GetListOfResearch))
+                            GetListOfResearch), 3)
                         .Select(e => e.Text)
                         .ToList();
 
@@ -183,7 +182,7 @@ namespace BLL.Parsers
 
                 var scientistSecondName = TranslateToEnglish(scientist);
 
-                _driver.FindElement(By.XPath(SetInputOfSearch)).SendKeys(scientistSecondName);
+                _driver.FindElement(By.XPath(SetInputOfSearch), 3).SendKeys(scientistSecondName);
 
                 List<(string, Func<string, By>)> listOfSearchElements = new()
                 {
@@ -213,7 +212,7 @@ namespace BLL.Parsers
 
                     var listOfFieldsOfResearch = _driver
                         .FindElements(By.XPath(
-                            GetListOfResearch))
+                            GetListOfResearch), 3)
                         .Select(e => e.Text)
                         .ToList();
 
@@ -232,7 +231,7 @@ namespace BLL.Parsers
             {
                 try
                 {
-                    parseListOfConcept = _driver.FindElements(By.XPath(GetListOfConcepts)).Select(e => e.Text).ToList();
+                    parseListOfConcept = _driver.FindElements(By.XPath(GetListOfConcepts), 3).Select(e => e.Text).ToList();
                     break;
                 }
                 catch (OpenQA.Selenium.NoSuchElementException e)
@@ -272,12 +271,12 @@ namespace BLL.Parsers
             {
                 try
                 {
-                    if (_driver.FindElement(By.XPath(GetMoreWorksForScientis)).Displayed)
+                    if (_driver.FindElement(By.XPath(GetMoreWorksForScientis), 3).Displayed)
                     {
-                        parseWorks = _driver.FindElements(By.XPath(ListOfWork)).Select(e => e.Text).ToList();
-                        listOfYearWork = _driver.FindElements(By.XPath(YearOfWorks)).Select(e => e.Text).ToList();
+                        parseWorks = _driver.FindElements(By.XPath(ListOfWork), 3).Select(e => e.Text).ToList();
+                        listOfYearWork = _driver.FindElements(By.XPath(YearOfWorks), 3).Select(e => e.Text).ToList();
                         parseWorks = StrHelper.FindEmptyString(parseWorks);
-                        _driver.FindElement(By.XPath(GetMoreWorksForScientis)).Click();
+                        _driver.FindElement(By.XPath(GetMoreWorksForScientis), 3).Click();
                         await Task.Delay(3500);
                     }
                 }
@@ -336,35 +335,21 @@ namespace BLL.Parsers
 
         private async Task<bool> CheckSearchValidation(Scientist scientist)
         {
-            if (_driver.FindElement(By.XPath(FindOrcidUrl)).Displayed)
+            try
             {
-                var orcidUrl = _driver.FindElement(By.XPath(FindOrcidUrl)).GetAttribute("href");
-
-                return await CheckByScopusUrl(scientist, orcidUrl);
-            }
-            return false;
-        }
-
-
-        private async Task AddOrcidSocialNetwork(Scientist scientist)
-        {
-
-            if (_driver.FindElement(By.XPath(FindOrcidUrl)).Displayed)
-            {
-                var orcidUrl = _driver.FindElement(By.XPath(FindOrcidUrl)).GetAttribute("href");
-
-                var newSSN = new ScientistSocialNetwork()
+                if (_driver.FindElement(By.XPath(FindOrcidUrl), 3).Displayed)
                 {
-                    ScientistId = scientist.Id,
-                    Url = orcidUrl,
-                    Type = SocialNetworkType.ORCID,
-                    SocialNetworkScientistId = orcidUrl.GetScientistSocialNetworkAccountId(SocialNetworkType.ORCID)
-                };
-                if (!_scientistSocialNetworkRepository.GetAll().Any(e => e.Url.Equals(newSSN.Url)))
-                {
-                    await _scientistSocialNetworkRepository.UpdateAsync(newSSN);
+                    var orcidUrl = _driver.FindElement(By.XPath(FindOrcidUrl), 3).GetAttribute("href");
+
+                    return await CheckByScopusUrl(scientist, orcidUrl);
                 }
             }
+            catch
+            {
+                return false;
+            }
+
+            return false;
         }
 
         private async Task CreateScientistFieldOfResearch(List<string> listOfFieldsOfResearch, List<FieldOfResearch> fieldsOfResearches,
@@ -433,7 +418,7 @@ namespace BLL.Parsers
 
         private async Task ClickElement(string a, Func<string, By> findBy)
         {
-            _driver.FindElement(findBy(a)).Click();
+            _driver.FindElement(findBy(a), 3).Click();
         }
 
         private async Task<string> GetStringCountOfWork(string a, Func<string, By> findBy)
@@ -442,7 +427,7 @@ namespace BLL.Parsers
             {
                 try
                 {
-                    var result = _driver.FindElement(findBy(a)).Text;
+                    var result = _driver.FindElement(findBy(a), 3).Text;
                     return result;
                 }
                 catch (OpenQA.Selenium.NoSuchElementException e)

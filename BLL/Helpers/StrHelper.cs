@@ -1,5 +1,4 @@
-﻿using DAL.AdditionalModels;
-using OpenQA.Selenium;
+﻿using OpenQA.Selenium;
 using System.Collections.ObjectModel;
 
 namespace BLL.Helpers
@@ -117,17 +116,6 @@ namespace BLL.Helpers
             return result[1];
         }
 
-        public static List<string> GetListFieldOfSearch(ReadOnlyCollection<IWebElement> ListFieldOfSearchElements)
-        {
-            var result = new List<string>();
-            for (int i = 0; i < ListFieldOfSearchElements.Count; i++)
-            {
-                var tempSubDirection = ListFieldOfSearchElements[i].Text.Split('\r');
-                result.Add(tempSubDirection[0]);
-            }
-            return result;
-        }
-
         public static List<string> GetListSubdirection(List<string> listOfSubDirection)
         {
             char[] needToDelete = { 'П', 'е', 'д', 'а', 'г', 'о', 'г', 'і', 'к', 'а', '\r', '\n' };
@@ -146,17 +134,6 @@ namespace BLL.Helpers
         public static string GetSecondName(string scinetistName)
         {
             return scinetistName.Split()[0];
-        }
-        public static string GetScientistSocialNetworkAccountId(this string socialNetworkUrl, SocialNetworkType socialNetworkType)
-        {
-            return socialNetworkType switch
-            {
-                SocialNetworkType.GoogleScholar => new Uri(socialNetworkUrl).Query.Split("&").FirstOrDefault(parameter => parameter.Split("=")[0].Equals("?user")).Split("=")[1],
-                SocialNetworkType.Scopus => new Uri(socialNetworkUrl).Query.Split("&").FirstOrDefault(parameter => parameter.Split("=")[0].Equals("?authorId")).Split("=")[1],
-                SocialNetworkType.WOS => new Uri(socialNetworkUrl).AbsolutePath.Split("/").Last(),
-                SocialNetworkType.ORCID => new Uri(socialNetworkUrl).AbsolutePath.Split("/").Last(),
-                _ => throw new Exception(),
-            };
         }
 
         public static List<string> GetOnlyYear(List<string> listOfYearWork)

@@ -284,10 +284,10 @@ namespace BLL.Parsers
                     await _nbuviapParser.StartParsing();
                     break;
                 case ParsingType.ParsingOfMissingScientists:
-                    await _nbuviapParser.ParsingOfMissingScientists();
+                    //await _nbuviapParser.ParsingOfMissingScientists();
                     break;
                 case ParsingType.ParsingDimensionOneScientistBySecondName:
-                    await _parserDimensions.ParseDimensionsForSingleScientist(scientistSecondName);
+                    //await _parserDimensions.ParseDimensionsForSingleScientist(scientistSecondName);
                     break;
             }
 

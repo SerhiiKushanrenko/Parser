@@ -1,9 +1,8 @@
-﻿using BLL.Helpers;
+﻿using BLL.AdditionalModel;
 using BLL.Servises.Interfaces;
 using DAL.AdditionalModels;
 using DAL.Models;
 using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
 
 namespace BLL.Servises
 {
@@ -14,56 +13,22 @@ namespace BLL.Servises
         {
             _driver = driver;
         }
-        public void GetSocialNetwork(Scientist scientist)
+        public async Task GetSocialNetwork(Scientist scientist)
         {
-            var networksData = new List<(string Xpath, SocialNetworkType NetworkType)>()
+            var networksData = new List<NetworkData>()
             {
-                (Xpath: $"//td[contains(.,\"{scientist.Name}\")]/../td/a[contains(@href,'google')]", NetworkType: SocialNetworkType.GoogleScholar),
-                (Xpath: $"//td[contains(.,\"{scientist.Name}\")]/../td/a[contains(@href,'scopus')]", NetworkType: SocialNetworkType.Scopus),
-                (Xpath: $"//td[contains(.,\"{scientist.Name}\")]/../td/a[contains(@href,'wos')]", NetworkType: SocialNetworkType.WOS)
+                new NetworkData(scientist, SocialNetworkType.Google),
+                new NetworkData(scientist, SocialNetworkType.Scopus),
+                new NetworkData(scientist, SocialNetworkType.WOS),
             };
-            var result = new List<ScientistSocialNetwork>();
 
+            networksData.ForEach(networkData => networkData.Value = GetSocialUrl(networkData.XPath));
+            var scientistSocialNetworks = new List<ScientistSocialNetwork>();
             foreach (var networkData in networksData)
             {
-                var netWorkUrl = GetSocialUrl(networkData.Xpath);
-
-                if (networkData.NetworkType == SocialNetworkType.Scopus)
-                {
-                    result.Add(new ScientistSocialNetwork()
-                    {
-                        ScientistId = scientist.Id,
-                        Url = GetOrcidUrl(netWorkUrl),
-                        Type = SocialNetworkType.ORCID,
-                        SocialNetworkScientistId = netWorkUrl.GetScientistSocialNetworkAccountId(networkData.NetworkType)
-                    });
-                }
-
-                if (!string.IsNullOrEmpty(netWorkUrl))
-                {
-                    result.Add(new ScientistSocialNetwork()
-                    {
-                        ScientistId = scientist.Id,
-                        Url = netWorkUrl,
-                        Type = networkData.NetworkType,
-                        SocialNetworkScientistId = netWorkUrl.GetScientistSocialNetworkAccountId(networkData.NetworkType)
-                    });
-                }
+                scientistSocialNetworks.AddRange(await networkData.Convert());
             }
-            scientist.ScientistSocialNetworks = result;
-        }
-
-        private string GetOrcidUrl(string netWorkUrl)
-        {
-            IWebDriver driver = new ChromeDriver();
-            driver.Navigate().GoToUrl(netWorkUrl);
-
-            var scopusUrl = driver
-                .FindElement(By.XPath(
-                    "//ul[contains(@class,'ul--horizontal margin-size-0-t')]//span[contains(@class,'link__text')]"))
-                .Text;
-            driver.Quit();
-            return scopusUrl;
+            scientist.ScientistSocialNetworks = scientistSocialNetworks;
         }
 
         public string GetSocialUrl(string socialNetworkXPath)
