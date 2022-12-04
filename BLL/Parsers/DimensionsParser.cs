@@ -40,7 +40,7 @@ namespace BLL.Parsers
         private const string GetListOfConcepts =
             "//*[@id=\"mainContentBlock\"]//article[1]//section[2]//li[contains(@class,'showmore__item')]";
         private const string YearOfWorks =
-            "//div[contains(@class,'mathjax resultList resultList--publications')]//div[contains(@class,'sc-grBbyg sc-czurPZ dsDwVN foTLaS')]";
+            "//*[@id=\"mainContentBlock\"]/div/div[4]/section[1]/div[2]/article/div[2]";
 
 
         private const int MajorFieldOfResearchLength = 2;
@@ -80,6 +80,7 @@ namespace BLL.Parsers
                 var scientistSecondName = TranslateToEnglish(scientist);
 
                 _driver.FindElement(By.XPath(SetInputOfSearch), 3).SendKeys(scientistSecondName);
+                await Task.Delay(2000);
                 _driver.FindElement(By.XPath(SetInputOfSearch), 3).SendKeys(Keys.Enter);
                 List<(string, Func<string, By>)> listOfSearchElements = new()
                 {
@@ -91,13 +92,10 @@ namespace BLL.Parsers
 
                 foreach (var searchElement in listOfSearchElements)
                 {
-                    // await CheckAndClickElement(searchElement.Item1, searchElement.Item2);
                     await _asyncRetryPolicy.ExecuteAsync(() => ClickElement(searchElement.Item1, searchElement.Item2));
                 }
 
 
-
-                //await AddOrcidSocialNetwork(scientist);
                 if (await CheckSearchValidation(scientist))
                 {
                     await AddConsepts(scientist);
@@ -141,13 +139,10 @@ namespace BLL.Parsers
 
                 foreach (var searchElement in listOfSearchElements)
                 {
-                    // await CheckAndClickElement(searchElement.Item1, searchElement.Item2);
                     await _asyncRetryPolicy.ExecuteAsync(() => ClickElement(searchElement.Item1, searchElement.Item2));
                 }
 
 
-
-                //await AddOrcidSocialNetwork(scientist);
                 if (await CheckSearchValidation(scientist))
                 {
                     await AddConsepts(scientist);
@@ -195,13 +190,10 @@ namespace BLL.Parsers
 
                 foreach (var searchElement in listOfSearchElements)
                 {
-                    // await CheckAndClickElement(searchElement.Item1, searchElement.Item2);
+
                     await _asyncRetryPolicy.ExecuteAsync(() => ClickElement(searchElement.Item1, searchElement.Item2));
                 }
 
-
-
-                //await AddOrcidSocialNetwork(scientist);
                 if (await CheckSearchValidation(scientist))
                 {
                     await AddConsepts(scientist);
@@ -271,13 +263,13 @@ namespace BLL.Parsers
             {
                 try
                 {
-                    if (_driver.FindElement(By.XPath(GetMoreWorksForScientis), 3).Displayed)
+                    if (_driver.FindElement(By.XPath(GetMoreWorksForScientis), 0).Displayed)
                     {
-                        parseWorks = _driver.FindElements(By.XPath(ListOfWork), 3).Select(e => e.Text).ToList();
-                        listOfYearWork = _driver.FindElements(By.XPath(YearOfWorks), 3).Select(e => e.Text).ToList();
+                        parseWorks = _driver.FindElements(By.XPath(ListOfWork), 0).Select(e => e.Text).ToList();
+                        listOfYearWork = _driver.FindElements(By.XPath(YearOfWorks), 0).Select(e => e.Text).ToList();
                         parseWorks = StrHelper.FindEmptyString(parseWorks);
-                        _driver.FindElement(By.XPath(GetMoreWorksForScientis), 3).Click();
-                        await Task.Delay(3500);
+                        _driver.FindElement(By.XPath(GetMoreWorksForScientis), 0).Click();
+                        await Task.Delay(4500);
                     }
                 }
                 catch (OpenQA.Selenium.NoSuchElementException e)
@@ -319,18 +311,13 @@ namespace BLL.Parsers
         private async Task<bool> CheckByScopusUrl(Scientist scientist, string scopusUrlFromDimensions)
         {
             var scopusUrl = _scientistSocialNetworkRepository.GetAll()
-                .Where(e => e.ScientistId == scientist.Id).ToList();
-
-            foreach (var scientistSocialNetwork in scopusUrl)
+                .Where(e => e.ScientistId == scientist.Id).FirstOrDefault(e => e.Type == SocialNetworkType.ORCID);
+            if (scopusUrl != null)
             {
-                if (scientistSocialNetwork.Type == SocialNetworkType.ORCID)
-                {
-                    return scopusUrl.Equals(scopusUrlFromDimensions);
-                }
+                return scopusUrl.Equals(scopusUrl);
             }
 
             return false;
-
         }
 
         private async Task<bool> CheckSearchValidation(Scientist scientist)
@@ -390,16 +377,18 @@ namespace BLL.Parsers
 
             foreach (var parsedMajorFieldOfResearch in parsedMajorFieldsOfResearch)
             {
-                existingFieldOfResearch = fieldsOfResearches.FirstOrDefault(existingFieldOfResearch =>
-                    existingFieldOfResearch.ANZSRC == parsedMajorFieldOfResearch.ANZSRC);
-                if (existingFieldOfResearch != null)
-                {
-                    var missingChildFieldsOfResearch = parsedMajorFieldOfResearch.ChildFieldsOfResearch.Where(
-                        parsedChildFieldOfResearch => !existingFieldOfResearch.ChildFieldsOfResearch.Any(
-                            existingChildFieldOfResearch =>
-                                existingChildFieldOfResearch.ANZSRC == parsedChildFieldOfResearch.ANZSRC));
-                    existingFieldOfResearch.ChildFieldsOfResearch = missingChildFieldsOfResearch.ToList();
-                }
+                //are we need this Part? 
+
+                //existingFieldOfResearch = fieldsOfResearches.FirstOrDefault(existingFieldOfResearch =>
+                //    existingFieldOfResearch.ANZSRC == parsedMajorFieldOfResearch.ANZSRC);
+                //if (existingFieldOfResearch != null)
+                //{
+                //    var missingChildFieldsOfResearch = parsedMajorFieldOfResearch.ChildFieldsOfResearch.Where(
+                //        parsedChildFieldOfResearch => !existingFieldOfResearch.ChildFieldsOfResearch.Any(
+                //            existingChildFieldOfResearch =>
+                //                existingChildFieldOfResearch.ANZSRC == parsedChildFieldOfResearch.ANZSRC));
+                //    existingFieldOfResearch.ChildFieldsOfResearch = missingChildFieldsOfResearch.ToList();
+                //}
 
                 parsedMajorFieldOfResearch.ChildFieldsOfResearch = parsedSubFieldsOfResearch.Where(fieldOfResearch =>
                     fieldOfResearch.ANZSRC.ToString()[..2].Equals(parsedMajorFieldOfResearch.ANZSRC.ToString())).ToList();
