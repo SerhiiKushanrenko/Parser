@@ -5,13 +5,12 @@ using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using DAL.EF;
 
 #nullable disable
 
 namespace DAL.Migrations
 {
-        
+
 
     [DbContext(typeof(ParserDbContext))]
     [Migration("20220922084108_Initial")]

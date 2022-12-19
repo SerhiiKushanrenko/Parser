@@ -1,16 +1,18 @@
 ﻿using DAL.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace DAL.EF
+namespace DAL
 {
     public class ParserDbContext : DbContext
     {
         public DbSet<Scientist> Scientists { get; set; } = null!;
-        public DbSet<ScientistFieldOfResearch> ScientistFieldOfResearch { get; set; } = null!;
-        public DbSet<ScientistWork> ScientistsWork { get; set; } = null!;
+        public DbSet<Organization> Organizations { get; set; } = null!;
+        public DbSet<Concept> Concepts { get; set; } = null!;
+        public DbSet<FieldOfResearch> FieldsOfResearch { get; set; } = null!;
+        public DbSet<ScientistFieldOfResearch> ScientistsFieldsOfResearch { get; set; } = null!;
         public DbSet<Work> Works { get; set; } = null!;
-        public DbSet<ScientistFieldOfResearch> FieldOfResearch { get; set; } = null!;
-        public DbSet<ScientistSocialNetwork> SocialNetworkOfScientists { get; set; } = null!;
+        public DbSet<ScientistWork> ScientistWorks { get; set; } = null!;
+        public DbSet<ScientistSocialNetwork> ScientistsSocialNetworks { get; set; } = null!;
 
         public ParserDbContext()
         {
@@ -23,7 +25,6 @@ namespace DAL.EF
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-
             optionsBuilder.UseNpgsql();
         }
 
@@ -54,16 +55,6 @@ namespace DAL.EF
                 .HasOne(s => s.Scientist)
                 .WithMany(g => g.Concepts)
                 .HasForeignKey(s => s.ScientistId);
-
-            //modelBuilder.Entity<ScientistFieldOfResearch>()
-            //    .HasMany(s => s.ScientistsFieldsOfResearch)
-            //    .WithOne(g => g.FieldOfResearch)
-            //    .HasForeignKey(s => s.FieldOfResearchId);
-
-            //modelBuilder.Entity<ScientistFieldOfResearch>()
-            //    .HasOne(s => s.ParentFieldOfResearch)
-            //    .WithMany(g => g.ChildFieldsOfResearch)
-            //    .HasForeignKey(s => s.ParentFieldOfResearchId);
 
             modelBuilder.Entity<ScientistFieldOfResearch>()
                 .HasOne(s => s.Scientist)

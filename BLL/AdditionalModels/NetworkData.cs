@@ -1,18 +1,13 @@
 ﻿using DAL.AdditionalModels;
 using DAL.Models;
-using OpenQA.Selenium;
-using OpenQA.Selenium.Chrome;
-
-namespace BLL.AdditionalModel
+#pragma warning disable CS8602 // Dereference of a possibly null reference.
+namespace BLL.AdditionalModels
 {
     public class NetworkData
     {
         public string XPath { get; }
-
         public Scientist Scientist { get; set; }
-
         public string Value { get; set; }
-
         public SocialNetworkType NetworkType { get; set; }
 
         public NetworkData(Scientist scientist, SocialNetworkType networkType)
@@ -27,17 +22,6 @@ namespace BLL.AdditionalModel
             var scientistSocialNetworks = new List<ScientistSocialNetwork>();
             if (!string.IsNullOrEmpty(Value))
             {
-                if (NetworkType == SocialNetworkType.Scopus)
-                {
-                    scientistSocialNetworks.Add(new ScientistSocialNetwork()
-                    {
-                        ScientistId = Scientist.Id,
-                        Url = await GetOrcidUrl(),
-                        Type = NetworkType,
-                        SocialNetworkScientistId = GetScientistSocialNetworkAccountId()
-                    });
-                }
-
                 scientistSocialNetworks.Add(new ScientistSocialNetwork()
                 {
                     ScientistId = Scientist.Id,
@@ -53,25 +37,15 @@ namespace BLL.AdditionalModel
         {
             return NetworkType switch
             {
-                SocialNetworkType.Google => new Uri(Value).Query.Split("&").FirstOrDefault(parameter => parameter.Split("=")[0].Equals("?user")).Split("=")[1],
-                SocialNetworkType.Scopus => new Uri(Value).Query.Split("&").FirstOrDefault(parameter => parameter.Split("=")[0].Equals("?authorId")).Split("=")[1],
+                SocialNetworkType.Google => new Uri(Value).Query.Split("&")
+                    .FirstOrDefault(parameter => parameter.Split("=")[0].Equals("?user")).Split("=")[1],
+                SocialNetworkType.Scopus => new Uri(Value).Query.Split("&")
+                    .FirstOrDefault(parameter => parameter.Split("=")[0].Equals("?authorId")).Split("=")[1],
                 SocialNetworkType.WOS => new Uri(Value).AbsolutePath.Split("/").Last(),
                 SocialNetworkType.ORCID => new Uri(Value).AbsolutePath.Split("/").Last(),
                 _ => throw new Exception(),
             };
         }
-
-        private async Task<string> GetOrcidUrl()
-        {
-            IWebDriver driver = new ChromeDriver();
-            driver.Navigate().GoToUrl(Value);
-            await Task.Delay(1000);
-            var scopusUrl = driver
-                .FindElement(By.XPath(
-                    "//ul[contains(@class,'ul--horizontal margin-size-0-t')]//span[contains(@class,'link__text')]"))
-                .Text;
-            driver.Quit();
-            return scopusUrl;
-        }
     }
 }
+#pragma warning restore CS8602 // Dereference of a possibly null reference.

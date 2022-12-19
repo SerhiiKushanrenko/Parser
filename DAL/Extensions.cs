@@ -1,5 +1,4 @@
-﻿using DAL.EF;
-using DAL.Repositories;
+﻿using DAL.Repositories;
 using DAL.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -20,8 +19,6 @@ namespace DAL
                     context.Database.Migrate();
                 }
             }
-
-            services.AddScoped(typeof(IRepository<>), typeof(Repository<>));
 
             services.AddScoped(typeof(IFieldOfResearchRepository), typeof(FieldOfResearchRepository));
 

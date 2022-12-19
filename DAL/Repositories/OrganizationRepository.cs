@@ -1,5 +1,4 @@
-﻿using DAL.EF;
-using DAL.Models;
+﻿using DAL.Models;
 using DAL.Repositories.Interfaces;
 using Microsoft.EntityFrameworkCore;
 

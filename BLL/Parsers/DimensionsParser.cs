@@ -12,7 +12,7 @@ using Polly.Retry;
 
 namespace BLL.Parsers
 {
-    public class DimensionsParser : IParserDimensions
+    public class DimensionsParser : IDimensionsParser
     {
         private readonly IConceptRepository _conceptRepository;
         private readonly IFieldOfResearchRepository _fieldOfResearchRepository;
@@ -69,7 +69,7 @@ namespace BLL.Parsers
             _asyncRetryPolicy = Policy.Handle<Exception>().WaitAndRetryAsync(retryCount: 3, sleepDurationProvider: e => TimeSpan.FromSeconds(2));
         }
 
-        public async Task StartParse()
+        public async Task StartParsing()
         {
             var scientists = await _scientistRepository.GetAll().ToListAsync();
             var fieldsOfResearches = await _fieldOfResearchRepository.GetAll().Include(fieldOfResearch => fieldOfResearch.ChildFieldsOfResearch).ToListAsync();
@@ -257,7 +257,7 @@ namespace BLL.Parsers
         {
             await Task.Delay(2500);
             var stringCountOfWork = await GetStringCountOfWork(CountOfWork, By.XPath);
-            var countWork = StrHelper.GetCountWork(stringCountOfWork);
+            var countWork = StringHelper.GetCountWork(stringCountOfWork);
 
             var parseWorks = new List<string>();
 
@@ -275,7 +275,7 @@ namespace BLL.Parsers
                     {
                         parseWorks = _driver.FindElements(By.XPath(ListOfWork), 3).Select(e => e.Text).ToList();
                         listOfYearWork = _driver.FindElements(By.XPath(YearOfWorks), 3).Select(e => e.Text).ToList();
-                        parseWorks = StrHelper.FindEmptyString(parseWorks);
+                        parseWorks = StringHelper.FindEmptyString(parseWorks);
                         _driver.FindElement(By.XPath(GetMoreWorksForScientis), 3).Click();
                         await Task.Delay(3500);
                     }
@@ -286,7 +286,7 @@ namespace BLL.Parsers
                 }
             }
 
-            listOfYearWork = StrHelper.GetOnlyYear(listOfYearWork);
+            listOfYearWork = StringHelper.GetOnlyYear(listOfYearWork);
 
             for (var i = 0; i < parseWorks.Count; i++)
             {
@@ -440,7 +440,7 @@ namespace BLL.Parsers
 
         private static string TranslateToEnglish(Scientist scientist)
         {
-            var secondName = StrHelper.GetSecondName(scientist.Name);
+            var secondName = StringHelper.GetSecondName(scientist.Name);
 
             TranslationServiceClient client = TranslationServiceClient.Create();
 

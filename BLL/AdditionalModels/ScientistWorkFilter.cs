@@ -1,4 +1,4 @@
-﻿namespace DAL.AdditionalModels
+﻿namespace BLL.AdditionalModels
 {
     public class ScientistWorkFilter
     {

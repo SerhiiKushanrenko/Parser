@@ -1,10 +1,8 @@
-﻿using DAL.EF;
-using DAL.Repositories.Interfaces;
-using Microsoft.EntityFrameworkCore;
+﻿using DAL.Repositories.Interfaces;
 
 namespace DAL.Repositories
 {
-    public class Repository<EntType> : IRepository<EntType> where EntType : class
+    public abstract class Repository<EntType> : IRepository<EntType> where EntType : class
     {
         private readonly ParserDbContext _context;
 
@@ -16,11 +14,6 @@ namespace DAL.Repositories
         public IQueryable<EntType> GetAll()
         {
             return _context.Set<EntType>().AsQueryable();
-        }
-
-        protected IQueryable<EntType> GetAllWithIgnore()
-        {
-            return _context.Set<EntType>().IgnoreAutoIncludes().AsQueryable();
         }
 
         public Task<int> CreateAsync(EntType entity)

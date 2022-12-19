@@ -1,5 +1,4 @@
-﻿using DAL.AdditionalModels;
-using DAL.Models;
+﻿using DAL.Models;
 
 namespace DAL.Repositories.Interfaces
 {
@@ -9,7 +8,5 @@ namespace DAL.Repositories.Interfaces
         Task<FieldOfResearch> GetAsync(int id);
 
         Task<FieldOfResearch> GetAsync(string title);
-
-        Task<List<FieldOfResearch>> GetFieldsOfResearchAsync(FieldOfResearchFilter? filter = null);
     }
 }
